@@ -1,7 +1,7 @@
 # gridwords
-Gridwords is a custom crossword puzzle maker. `gridwords.py` designs crossword puzzle grids with numbers where words start.
+Gridwords is a custom crossword puzzle maker that lets you design crossword puzzle grids and put words into the grid.
 
-**TODO:** Allow user to insert words into grid, and check partial words in dictionary to make sure puzzle works.
+**TODO:** Check words and partial words in a database of crossword puzzle words and clues to make sure puzzle works.
 
 ## Download:
 `git clone https://github.com/sagemeadows/gridwords` or click on the green 'Code' button in the upper right corner and download ZIP
