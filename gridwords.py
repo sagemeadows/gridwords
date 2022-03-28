@@ -5,10 +5,13 @@
 # Usage:
 #     gridmaker.py
 #
-# Create crossword puzzle grids.
+# Create and fill crossword puzzle grids.
 #
 
 import sys
+import os
+import re
+import tkinter as tk
 import pygame
 print()
 
@@ -16,18 +19,28 @@ print()
 instructions = """
 Welcome to Gridwords!
 
-Click on the boxes to design your crossword puzzle.
-Press ESC or close Pygame window to quit. 
+Press CTRL+M to toggle between grid-editing mode and word-filling mode.
+  grid-editing mode:
+    - Click on boxes to design your crossword puzzle.
+  word-filling mode:
+    - Click on a box to highlight it. 
+    - Press a letter key to insert that letter into the highlighted box.
+    - Use the arrow keys to move the highlighted box.
+    - Scroll up or down to change direction of the highlighted word.
+    - Press CTRL+P to see how many words will fit slots in the grid.
+Press ESC or close pygame window to quit. 
 """
 print(instructions)
 
 # Define colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+CYAN = (0, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
+YELLOW = (255, 255, 0)
 
 # Set WIDTH and HEIGHT of each grid location
 WIDTH = 40
@@ -50,8 +63,9 @@ down = [] # where down words are
 letters = [] # where actual letters go
 working_word = [] # word that's being filled in; highlight yellow
 working_letter = [] # letter that's being filled in; highlight {color?}
-poss = [] # whether a partial word can still 
-          # be a word (highlight green) or not (highlight red)
+
+poss_nums_across = [] # how many possibilities for across words
+poss_nums_down = [] # how many possibilities for down words
 
 for row in range(rows):
     # Add empty list (row)
@@ -63,7 +77,9 @@ for row in range(rows):
     letters.append([])
     working_word.append([])
     working_letter.append([])
-    poss.append([])
+    
+    poss_nums_across.append([])
+    poss_nums_down.append([])
     
     for column in range(columns):
         # Add cell (column)
@@ -72,11 +88,31 @@ for row in range(rows):
         across[row].append(-1)
         down[row].append(-1)
         
-        letters[row].append(' ')
+        letters[row].append('.')
         working_word[row].append(0)
         working_letter[row].append(0)
-        poss[row].append(0)
+        
+        poss_nums_across[row].append(100)
+        poss_nums_down[row].append(100)
  
+# Establish words database
+words_filename = "/etc/dictionaries-common/words"
+
+# Define functions
+def insert_poss_word(word, index, direc):
+    word_lst = []
+    for i in range(len(word)):
+        words_lst[i] = word[i]
+    if direc == 0:
+        grid_direc = across
+    elif direc == 1:
+        grid_direc = down
+    for row in range(rows):
+        for column in range(columns):
+            if grid_direc[row][column] == index:
+                letters[row][column] = word_lst.pop(0)
+                
+
 # Start pygame
 pygame.init()
  
@@ -91,13 +127,18 @@ pygame.display.set_caption("Gridwords")
 
 # Group letters
 letter_keys = [pygame.K_a, pygame.K_b, pygame.K_c, pygame.K_d, pygame.K_e, pygame.K_f, pygame.K_g, 
-               pygame.K_h, pygame.K_i, pygame.K_j, pygame.K_l, pygame.K_m, pygame.K_n, pygame.K_o, 
-               pygame.K_p, pygame.K_q, pygame.K_r, pygame.K_s, pygame.K_t, pygame.K_u, pygame.K_v, 
-               pygame.K_w, pygame.K_x, pygame.K_y, pygame.K_z]
+               pygame.K_h, pygame.K_i, pygame.K_j, pygame.K_k, pygame.K_l, pygame.K_m, pygame.K_n, 
+               pygame.K_o, pygame.K_p, pygame.K_q, pygame.K_r, pygame.K_s, pygame.K_t, pygame.K_u, 
+               pygame.K_v, pygame.K_w, pygame.K_x, pygame.K_y, pygame.K_z]
 
 # Set fonts
-num_font = pygame.font.SysFont('Calibri', 15, True, False)
-let_font = pygame.font.SysFont('Calibri', 30, False, False)
+#num_font = pygame.font.SysFont('Calibri', 15, True, False)
+#let_font = pygame.font.SysFont('Calibri', 30, False, False)
+
+cwd = os.getcwd()
+num_font = pygame.font.Font(f'{cwd}/fonts/arial_monospaced_mt.ttf', 15)
+let_font = pygame.font.Font(f'{cwd}/fonts/arial_monospaced_mt.ttf', 30)
+
 
 # Put text in grid boxes
 def box_num(row, column, num):
@@ -107,8 +148,8 @@ def box_num(row, column, num):
 
 def box_let(row, column, letter):
     text = let_font.render(letter, True, BLACK)
-    screen.blit(text, [(MARGIN + WIDTH) * column + MARGIN + WIDTH / 4,
-                       (MARGIN + HEIGHT) * row + MARGIN + HEIGHT / 4])
+    screen.blit(text, [(MARGIN + WIDTH) * column + MARGIN + WIDTH / 3.5,
+                       (MARGIN + HEIGHT) * row + MARGIN + HEIGHT / 6])
 
 # Loop until the user clicks the close button.
 done = False
@@ -143,7 +184,9 @@ while not done:
                 # to the opposite of its current value
                 if grid[row][column] == 0:
                     grid[row][column] = 1
+                    letters[row][column] = '.'
                     grid[0-row-1][0-column-1] = 1
+                    letters[0-row-1][0-column-1] = '.'
                 elif grid[row][column] == 1:
                     grid[row][column] = 0
                     grid[0-row-1][0-column-1] = 0
@@ -160,6 +203,7 @@ while not done:
                             working_word[rw][cl] = 0
                     # mark new working letter
                     working_letter[row][column] = 1
+                    wl = (row, column)
                     # use left click to get default direction which
                     # is across unless square is not in an across word
                     if event.button == 1:
@@ -167,8 +211,8 @@ while not done:
                             working_direc = 'across'
                         elif down[row][column] > 0:
                             working_direc = 'down'
-                    # use right click to change working direction
-                    elif event.button == 3:
+                    # use scroll to change working direction
+                    elif event.button in [4, 5]: #== 3:
                         # as long as that letter is in both an across and down word
                         if across[row][column] > 0 and down[row][column] > 0:
                             if working_direc == 'across':
@@ -180,11 +224,36 @@ while not done:
                             for cl in range(columns):
                                 if across[rw][cl] == across[row][column]:
                                     working_word[rw][cl] = 1
+                        working_word_index = across[row][column]
+                        working_word_direc = 0
                     elif working_direc == 'down':
                         for rw in range(rows):
                             for cl in range(columns):
                                 if down[rw][cl] == down[row][column]:
                                     working_word[rw][cl] = 1
+                        working_word_index = down[row][column]
+                        working_word_direc = 1
+                    # TODO: Get list of possible words in tkinter window
+                    ## use right click to get tkinter window with word possibilities
+                    #if event.button == 3:
+                    #    print("DEBUG\tRight click registered!")
+                    #    poss_words = words[str(working_word_index)][working_word_direc]#[-1]
+                    #    print(f"DEBUG\tPossible Words: {poss_words}")
+                        #if poss_words:
+                        #    tkwindow = tk.Tk()
+                        #    tkwindow.rowconfigure(range(len(poss_words)), minsize=50, weight=1)
+                        #    tkwindow.columnconfigure(0, minsize=50, weight=1)
+                        #    for i in range(len(poss_words)):
+                        #        btn = tk.Button(master=tkwindow, text=poss_words[i], 
+                        #                        command=insert_poss_word(poss_words[i], working_word_index, working_word_direc)
+                        #                       )
+                        #        btn.grid(row=i, column=0, sticky="nsew")
+                        #    tkwindow.mainloop()
+                        #else:
+                        #    tkwindow = tk.Tk()
+                        #    label_a = tk.Label(text="No possible words")
+                        #    label_a.pack()
+                        #    tkwindow.mainloop()
         
         elif event.type == pygame.KEYDOWN:
             # Quit
@@ -203,12 +272,67 @@ while not done:
                             working_letter[row][column] = 0
                             working_word[row][column] = 0
                     print("INFO\tYou are in grid-editing mode!")
+            # Calculate possibilities
+            elif event.key == pygame.K_p and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                if mode == 'fill':
+                    print(f"DEBUG\tWords: {words}")
+                    # Calculate possibilities
+                    for key in words:
+                        #print(f"DEBUG\tWord list length: {len(words[key][0])}")
+                        # clear old list of possible words
+                        # ^NOT ACTUALLY NEEDED RIGHT NOW BC 
+                        # DRAWING PART CLEARS WORDS DICT EVERY CYCLE,
+                        # WHICH NEEDS TO BE FIXED AT SOME POINT
+                        if words[key][0]:
+                            words[key][0][-1].clear()
+                            match_word = words[key][0][1].replace('.', '[A-Z]')
+                            across_word_match = re.compile(match_word)
+                        if words[key][1]:
+                            words[key][1][-1].clear()
+                            match_word = words[key][1][1].replace('.', '[A-Z]')
+                            down_word_match = re.compile(match_word)
+                        # open words file
+                        file_handle = open(words_filename, 'r')
+                        while True:
+                            line = file_handle.readline().upper().replace("'", "")
+                            if not line:
+                                # at end of file
+                                break
+                            if words[key][0]:
+                                awm = across_word_match.findall(line)
+                                if awm:
+                                    if awm[0] not in words[key][0][-1]:
+                                        words[key][0][-1].append(awm[0])
+                            if words[key][1]:
+                                dwm = down_word_match.findall(line)
+                                if dwm:
+                                    if dwm[0] not in words[key][1][-1]:
+                                        words[key][1][-1].append(dwm[0])
+                        file_handle.close()
+                        for row in range(rows):
+                            for column in range(columns):
+                                # clear working letter and working word
+                                working_letter[row][column] = 0
+                                working_word[row][column] = 0
+                                # put number of possible words in poss_num grids
+                                if across[row][column] == int(key):
+                                    poss_nums_across[row][column] = len(words[key][0][-1])
+                                if down[row][column] == int(key):
+                                    poss_nums_down[row][column] = len(words[key][1][-1])
+                    # DEBUG
+                    print(f"DEBUG\tWords: {words}")
+                    print(poss_nums_across)
+                    print(poss_nums_down)
             # Save grid
             elif event.key == pygame.K_s and pygame.key.get_mods() & pygame.KMOD_CTRL:
                 #print(f"DEBUG\tAcross Grid: {across}")
                 #print(f"DEBUG\tDown Grid: {down}")
                 #print(f"DEBUG\tLetters Grid: {letters}")
-                #print(f"DEBUG\tWords: {words}")
+                print(f"DEBUG\tWords: {words}")
+                #print(f"DEBUG\tAcross Word Possibilities: {poss_words_across}")
+                #print(f"DEBUG\tDown Word Possibilities: {poss_words_down}")
+                print(f"DEBUG\tAcross Number of Possibilities: {poss_nums_across}")
+                print(f"DEBUG\tDown Number of Possibilities: {poss_nums_down}")
                 proceed = input("QUERY\tSave grid? Y/n : ")
                 yes = 'Y', 'y', ''
                 if proceed in yes:
@@ -239,13 +363,133 @@ while not done:
                 for row in range(rows):
                     for column in range(columns):
                         if working_letter[row][column] == 1:
-                            letters[row][column] = pygame.key.name(event.key).upper()
+                            letters[row][column] = pygame.key.name(event.key).upper()                   
             # Delete letter
             elif event.key == pygame.K_BACKSPACE:
                 for row in range(rows):
                     for column in range(columns):
                         if working_letter[row][column] == 1:
-                            letters[row][column] = ' '
+                            letters[row][column] = '.'
+            
+            # Move working letter left
+            elif event.key == pygame.K_LEFT:
+                row = wl[0]
+                column = wl[1]
+                if column != 0 and grid[row][column-1] != 0:
+                    # reset old working letter
+                    working_letter[row][column] = 0
+                    # mark new working letter
+                    working_letter[row][column-1] = 1
+                    wl = (row, column-1)
+                    # clear old working word
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            working_word[rw][cl] = 0
+                    # mark new working word
+                    #  if working letter has only one direction
+                    if across[row][column-1] > 0 and down[row][column-1] == 0:
+                        working_direc = 'across'
+                    elif down[row][column-1] > 0 and across[row][column-1] == 0:
+                        working_direc = 'down'
+                    #  else use current working direction
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            if working_direc == 'across':
+                                if across[rw][cl] == across[row][column-1]:
+                                    working_word[rw][cl] = 1
+                            elif working_direc == 'down':
+                                if down[rw][cl] == down[row][column-1]:
+                                    working_word[rw][cl] = 1
+            
+            # Move working letter right
+            elif event.key == pygame.K_RIGHT:
+                row = wl[0]
+                column = wl[1]
+                if column != range(columns)[-1] and grid[row][column+1] != 0:
+                    # reset old working letter
+                    working_letter[row][column] = 0
+                    # mark new working letter
+                    working_letter[row][column+1] = 1
+                    wl = (row, column+1)
+                    # clear old working word
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            working_word[rw][cl] = 0
+                    # mark new working word
+                    #  if working letter has only one direction
+                    if across[row][column+1] > 0 and down[row][column+1] ==  0:
+                        working_direc = 'across'
+                    elif down[row][column+1] > 0 and across[row][column+1] == 0:
+                        working_direc = 'down'
+                    #  else use current working direction
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            if working_direc == 'across':
+                                if across[rw][cl] == across[row][column+1]:
+                                    working_word[rw][cl] = 1
+                            elif working_direc == 'down':
+                                if down[rw][cl] == down[row][column+1]:
+                                    working_word[rw][cl] = 1
+            
+            # Move working letter up
+            elif event.key == pygame.K_UP:
+                row = wl[0]
+                column = wl[1]
+                if row != 0 and grid[row-1][column] != 0:
+                    # reset old working letter
+                    working_letter[row][column] = 0
+                    # mark new working letter
+                    working_letter[row-1][column] = 1
+                    wl = (row-1, column)
+                    # clear old working word
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            working_word[rw][cl] = 0
+                    # mark new working word
+                    #  if working letter has only one direction
+                    if across[row-1][column] > 0 and down[row-1][column] == 0:
+                        working_direc = 'across'
+                    elif down[row-1][column] > 0 and across[row-1][column] == 0:
+                        working_direc = 'down'
+                    #  else use current working direction
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            if working_direc == 'across':
+                                if across[rw][cl] == across[row-1][column]:
+                                    working_word[rw][cl] = 1
+                            elif working_direc == 'down':
+                                if down[rw][cl] == down[row-1][column]:
+                                    working_word[rw][cl] = 1
+            
+            # Move working letter down
+            elif event.key == pygame.K_DOWN:
+                row = wl[0]
+                column = wl[1]
+                if row != range(rows)[-1] and grid[row+1][column] != 0:
+                    # reset old working letter
+                    working_letter[row][column] = 0
+                    # mark new working letter
+                    working_letter[row+1][column] = 1
+                    wl = (row+1, column)
+                    # clear old working word
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            working_word[rw][cl] = 0
+                    # mark new working word
+                    #  if working letter has only one direction
+                    if across[row+1][column] > 0 and down[row+1][column] == 0:
+                        working_direc = 'across'
+                    elif down[row+1][column] > 0 and across[row+1][column] == 0:
+                        working_direc = 'down'
+                    #  else use current working direction
+                    for rw in range(rows):
+                        for cl in range(columns):
+                            if working_direc == 'across':
+                                if across[rw][cl] == across[row+1][column]:
+                                    working_word[rw][cl] = 1
+                            elif working_direc == 'down':
+                                if down[rw][cl] == down[row+1][column]:
+                                    working_word[rw][cl] = 1
     
     # Clear screen
     screen.fill(BLACK)
@@ -256,10 +500,22 @@ while not done:
             color = WHITE
             if grid[row][column] == 0:
                 color = BLACK
+            
+            elif poss_nums_across[row][column] == 0 or poss_nums_down[row][column] == 0:
+                color = RED
+            
             elif working_letter[row][column] == 1:
-                color = ORANGE
+                color = BLUE
             elif working_word[row][column] == 1:
-                color = YELLOW
+                color = CYAN
+            
+            elif mode == 'fill':
+                if 1 < poss_nums_across[row][column] <= 10 or 1 < poss_nums_down[row][column] <= 10:
+                    color = ORANGE
+                elif 10 < poss_nums_across[row][column] <= 50 or 10 < poss_nums_down[row][column] <= 50:
+                    color = YELLOW
+                else:
+                    color = GREEN
             pygame.draw.rect(screen,
                              color,
                              [(MARGIN + WIDTH) * column + MARGIN,
@@ -397,14 +653,14 @@ while not done:
                     # add number to 'across' grid
                     across[row][column] = counter
                     # fill 'across' space for number in words dict
-                    words[str(counter)][0].extend([0, '', "clue"])
+                    words[str(counter)][0].extend([0, '', "clue", [] ])
                 
                 # if square is the start of vertical word
                 if word_down:
                     # add number to the down grid
                     down[row][column] = counter
                     # fill 'down' space for number in words dict
-                    words[str(counter)][1].extend([0, '', "clue"])
+                    words[str(counter)][1].extend([0, '', "clue", [] ])
 
     
     # Put numbers in 'across' and 'down' grid templates
@@ -436,7 +692,7 @@ while not done:
         for column in range(columns):
             # if square is white
             if grid[row][column] == 1:
-                ignore = ['#', ' ']
+                ignore = ['#', '.']
                 if letters[row][column] not in ignore:
                     box_let(row, column, letters[row][column])
     
