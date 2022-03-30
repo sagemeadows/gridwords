@@ -1,9 +1,9 @@
 #! /usr/bin/python
 #
-# gridmaker.py
+# gridwords.py
 #
 # Usage:
-#     gridmaker.py
+#     gridwords.py
 #
 # Create and fill crossword puzzle grids.
 #
