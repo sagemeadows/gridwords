@@ -45,7 +45,7 @@ YELLOW = (255, 255, 0)
 # Set WIDTH and HEIGHT of each grid location
 WIDTH = 40
 HEIGHT = 40
- 
+
 # Set the margin between each cell
 MARGIN = 5
 
@@ -80,7 +80,7 @@ for row in range(rows):
     
     poss_nums_across.append([])
     poss_nums_down.append([])
-    
+
     for column in range(columns):
         # Add cell (column)
         grid[row].append(1)
@@ -94,7 +94,7 @@ for row in range(rows):
         
         poss_nums_across[row].append(100)
         poss_nums_down[row].append(100)
- 
+
 # Establish words database
 words_filename = "/etc/dictionaries-common/words"
 
@@ -111,18 +111,18 @@ def insert_poss_word(word, index, direc):
         for column in range(columns):
             if grid_direc[row][column] == index:
                 letters[row][column] = word_lst.pop(0)
-                
+
 
 # Start pygame
 pygame.init()
- 
+
 # Set the width and height of the screen [width, height]
 # based on number of rows and columns
 window_width = WIDTH * columns + MARGIN * (columns + 1)
 window_height = HEIGHT * rows + MARGIN * (rows + 1)
 window_size = [window_width, window_height]
 screen = pygame.display.set_mode(window_size)
- 
+
 pygame.display.set_caption("Gridwords")
 
 # Group letters
@@ -151,8 +151,13 @@ def box_let(row, column, letter):
     screen.blit(text, [(MARGIN + WIDTH) * column + MARGIN + WIDTH / 3.5,
                        (MARGIN + HEIGHT) * row + MARGIN + HEIGHT / 6])
 
-# Loop until the user clicks the close button.
+# Loop until the user clicks the 
+# close button or presses ESC
 done = False
+
+# Set global boolean for determining 
+# whether gids and screen should be updated
+update = True
 
 # Set initial mode as grid-editing
 mode = 'grid'
@@ -160,10 +165,10 @@ print("INFO\tYou are in grid-editing mode!")
 
 # Establish word-filling direction variable
 working_direc = 'across'
- 
+
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
- 
+
 # -------- Main Program Loop -----------
 while not done:
     # --- Main event loop
@@ -191,6 +196,7 @@ while not done:
                     grid[row][column] = 0
                     grid[0-row-1][0-column-1] = 0
                 #print(f"CLICK\t{pos}\tGrid coordinates: ({row}, {column})")
+                update = True
             
             # If user is filling in words
             elif mode == 'fill':
@@ -211,6 +217,7 @@ while not done:
                             working_direc = 'across'
                         elif down[row][column] > 0:
                             working_direc = 'down'
+                        update = True
                     # use scroll to change working direction
                     elif event.button in [4, 5]: #== 3:
                         # as long as that letter is in both an across and down word
@@ -219,6 +226,7 @@ while not done:
                                 working_direc = 'down'
                             elif working_direc == 'down':
                                 working_direc = 'across'
+                            update = True
                     if working_direc == 'across':
                         for rw in range(rows):
                             for cl in range(columns):
@@ -233,6 +241,7 @@ while not done:
                                     working_word[rw][cl] = 1
                         working_word_index = down[row][column]
                         working_word_direc = 1
+                        
                     # TODO: Get list of possible words in tkinter window
                     ## use right click to get tkinter window with word possibilities
                     #if event.button == 3:
@@ -272,6 +281,7 @@ while not done:
                             working_letter[row][column] = 0
                             working_word[row][column] = 0
                     print("INFO\tYou are in grid-editing mode!")
+                update = True
             # Calculate possibilities
             elif event.key == pygame.K_p and pygame.key.get_mods() & pygame.KMOD_CTRL:
                 if mode == 'fill':
@@ -319,6 +329,7 @@ while not done:
                                     poss_nums_across[row][column] = len(words[key][0][-1])
                                 if down[row][column] == int(key):
                                     poss_nums_down[row][column] = len(words[key][1][-1])
+                    update = True
                     # DEBUG
                     print(f"DEBUG\tWords: {words}")
                     print(poss_nums_across)
@@ -360,17 +371,15 @@ while not done:
                         print("INFO\tYou are in word-filling mode!")
             # Insert letter
             elif event.key in letter_keys:
-                for row in range(rows):
-                    for column in range(columns):
-                        if working_letter[row][column] == 1:
-                            letters[row][column] = pygame.key.name(event.key).upper()                   
+                #working_letter[wl[0]][wl[1]] == 1:
+                letters[wl[0]][wl[1]] = pygame.key.name(event.key).upper()
+                update = True
             # Delete letter
             elif event.key == pygame.K_BACKSPACE:
-                for row in range(rows):
-                    for column in range(columns):
-                        if working_letter[row][column] == 1:
-                            letters[row][column] = '.'
-            
+                #working_letter[wl[0]][wl[1]] == 1:
+                letters[wl[0]][wl[1]] = '.'
+                update = True
+
             # Move working letter left
             elif event.key == pygame.K_LEFT:
                 row = wl[0]
@@ -400,7 +409,8 @@ while not done:
                             elif working_direc == 'down':
                                 if down[rw][cl] == down[row][column-1]:
                                     working_word[rw][cl] = 1
-            
+                    update = True
+
             # Move working letter right
             elif event.key == pygame.K_RIGHT:
                 row = wl[0]
@@ -430,7 +440,8 @@ while not done:
                             elif working_direc == 'down':
                                 if down[rw][cl] == down[row][column+1]:
                                     working_word[rw][cl] = 1
-            
+                    update = True
+
             # Move working letter up
             elif event.key == pygame.K_UP:
                 row = wl[0]
@@ -460,7 +471,8 @@ while not done:
                             elif working_direc == 'down':
                                 if down[rw][cl] == down[row-1][column]:
                                     working_word[rw][cl] = 1
-            
+                    update = True
+
             # Move working letter down
             elif event.key == pygame.K_DOWN:
                 row = wl[0]
@@ -490,10 +502,11 @@ while not done:
                             elif working_direc == 'down':
                                 if down[rw][cl] == down[row+1][column]:
                                     working_word[rw][cl] = 1
-    
+                    update = True
+
     # Clear screen
     screen.fill(BLACK)
- 
+
     # Draw grid boxes
     for row in range(rows):
         for column in range(columns):
@@ -523,184 +536,190 @@ while not done:
                               WIDTH,
                               HEIGHT])
 
-    # Clear box numbers
-    for row in range(rows):
-        for column in range(columns):
-            numgrid[row][column] = 0
+    # If a change has occurred which requires 
+    # the screen and certain grids and dicts to be updated:
+    if update == True:
+    
+        # Clear box numbers
+        for row in range(rows):
+            for column in range(columns):
+                numgrid[row][column] = 0
 
-    # Get grid template for 'across' and 'down' grids,
-    # with -1 for black spaces and 0 for white spaces.
-    # For 'letters', get template with '#' for black spaces
-    # but leave any letters in the white spaces
-    for row in range(rows):
-        for column in range(columns):
-            if grid[row][column] == 0:
-                across[row][column] = -1
-                down[row][column] = -1
-                letters[row][column] = '#'
-            elif grid[row][column] == 1:
-                across[row][column] = 0
-                down[row][column] = 0
+        # Get grid template for 'across' and 'down' grids,
+        # with -1 for black spaces and 0 for white spaces.
+        # For 'letters', get template with '#' for black spaces
+        # but leave any letters in the white spaces
+        for row in range(rows):
+            for column in range(columns):
+                if grid[row][column] == 0:
+                    across[row][column] = -1
+                    down[row][column] = -1
+                    letters[row][column] = '#'
+                elif grid[row][column] == 1:
+                    across[row][column] = 0
+                    down[row][column] = 0
 
-    # Get empty words dict
-    words = {}
+        # Get empty words dict
+        words = {}
 
-    # Count boxes and draw box numbers
-    counter = 0
-    for row in range(rows):
-        for column in range(columns):
-            # if square is white
-            if grid[row][column] == 1:
-                give_num = False
-                word_across = False
-                word_down = False
-                
-                # if square is in the top row
-                if row == 0:
-                    # if square is in the top left corner
-                    if column == 0:
+        # Count boxes and draw box numbers
+        counter = 0
+        for row in range(rows):
+            for column in range(columns):
+                # if square is white
+                if grid[row][column] == 1:
+                    give_num = False
+                    word_across = False
+                    word_down = False
+
+                    # if square is in the top row
+                    if row == 0:
+                        # if square is in the top left corner
+                        if column == 0:
+                            # HORIZONTAL CHECK FROM EDGE: if the square to its right is white
+                            if grid[row][column+1] == 1:
+                                give_num = True
+                                word_across = True
+                            # VERTICAL CHECK FROM EDGE: if the square below is white
+                            if grid[row+1][column] == 1:
+                                give_num = True
+                                word_down = True
+                        # if square is in the top right corner
+                        elif column == range(columns)[-1]:
+                            # VERTICAL CHECK FROM EDGE ONLY: if the square below is white
+                            if grid[row+1][column] == 1:
+                                give_num = True
+                                word_down = True
+                        else: # the square is in the top row 
+                              # but not leftmost or rightmost column
+                            # REGULAR HORIZONTAL CHECK: if the square to the left is black 
+                            #                           and the one to the right is white
+                            if grid[row][column-1] == 0 and grid[row][column+1] == 1:
+                                give_num = True
+                                word_across = True
+                            # VERTICAL CHECK FROM EDGE: if square below is white
+                            if grid[row+1][column] == 1:
+                                give_num = True
+                                word_down = True
+
+                    # if square is on bottom row
+                    if row == range(rows)[-1]:
+                        # if the square is in the bottom left corner
+                        if column == 0:
+                            # HORIZONTAL CHECK FROM EDGE ONLY: if the square to its right is white
+                            if grid[row][column+1] == 1:
+                                give_num = True
+                                word_across = True
+                        # if square is in the bottom right corner
+                        elif column == range(columns)[-1]:
+                            # NO HORIZONTAL OR VERTICAL CHECK
+                            break
+                        else: # the square is on the bottom row 
+                              # but not leftmost or rightmost column
+                            # REGULAR HORIZONTAL CHECK ONLY: if the square to the left is black 
+                            #                                and the one to the right is white
+                            if grid[row][column-1] == 0 and grid[row][column+1] == 1:
+                                give_num = True
+                                word_across = True
+
+                    # if square is in the leftmost column
+                    # (but not in top or bottom row, bc we already covered that)
+                    elif column == 0 and row != 0:
                         # HORIZONTAL CHECK FROM EDGE: if the square to its right is white
                         if grid[row][column+1] == 1:
                             give_num = True
                             word_across = True
-                        # VERTICAL CHECK FROM EDGE: if the square below is white
-                        if grid[row+1][column] == 1:
+                        # REGULAR VERTICAL CHECK: if the square above is black 
+                        #                         and the one below is white
+                        if grid[row-1][column] == 0 and grid[row+1][column] == 1:
                             give_num = True
                             word_down = True
-                    # if square is in the top right corner
-                    elif column == range(columns)[-1]:
-                        # VERTICAL CHECK FROM EDGE ONLY: if the square below is white
-                        if grid[row+1][column] == 1:
-                            give_num = True
-                            word_down = True
-                    else: # the square is in the top row 
-                          # but not leftmost or rightmost column
-                        # REGULAR HORIZONTAL CHECK: if the square to the left is black 
-                        #                           and the one to the right is white
-                        if grid[row][column-1] == 0 and grid[row][column+1] == 1:
-                            give_num = True
-                            word_across = True
-                        # VERTICAL CHECK FROM EDGE: if square below is white
-                        if grid[row+1][column] == 1:
-                            give_num = True
-                            word_down = True
-                
-                # if square is on bottom row
-                if row == range(rows)[-1]:
-                    # if the square is in the bottom left corner
-                    if column == 0:
-                        # HORIZONTAL CHECK FROM EDGE ONLY: if the square to its right is white
-                        if grid[row][column+1] == 1:
-                            give_num = True
-                            word_across = True
-                    # if square is in the bottom right corner
-                    elif column == range(columns)[-1]:
-                        # NO HORIZONTAL OR VERTICAL CHECK
-                        break
-                    else: # the square is on the bottom row 
-                          # but not leftmost or rightmost column
-                        # REGULAR HORIZONTAL CHECK ONLY: if the square to the left is black 
-                        #                                and the one to the right is white
-                        if grid[row][column-1] == 0 and grid[row][column+1] == 1:
-                            give_num = True
-                            word_across = True
-                
-                # if square is in the leftmost column
-                # (but not in top or bottom row, bc we already covered that)
-                elif column == 0 and row != 0:
-                    # HORIZONTAL CHECK FROM EDGE: if the square to its right is white
-                    if grid[row][column+1] == 1:
-                        give_num = True
-                        word_across = True
-                    # REGULAR VERTICAL CHECK: if the square above is black 
-                    #                         and the one below is white
-                    if grid[row-1][column] == 0 and grid[row+1][column] == 1:
-                        give_num = True
-                        word_down = True
-                
-                # if square is in the rightmost column
-                # (but not in top or bottom row, bc we already covered that)
-                elif column == range(columns)[-1]:
-                    # REGULAR VERTICAL CHECK ONLY: if the square above is black
-                    #                              and the one below is white
-                    if grid[row-1][column] == 0 and grid[row+1][column] == 1:
-                        give_num = True
-                        word_down = True
-                
-                else: # square is not at any edge
-                    # REGULAR HORIZONTAL CHECK: if the square to its left is black
-                    #                           and the one to its right is white
-                    if grid[row][column-1] == 0 and grid[row][column+1] == 1:
-                        give_num = True
-                        word_across = True
-                    # REGULAR VERTICAL CHECK: if the square above is black
-                    #                         and the one below is white
-                    if grid[row-1][column] == 0 and grid[row+1][column] == 1:
-                        give_num = True
-                        word_down = True
-                
-                # if square is the start of a word
-                if give_num:
-                    # give it a number
-                    counter += 1
-                    numgrid[row][column] = counter
-                    box_num(row, column, counter)
-                    # add number to words dict
-                    words[str(counter)] = [[], []]
-                
-                # if square is the start of horizontal word
-                if word_across:
-                    # add number to 'across' grid
-                    across[row][column] = counter
-                    # fill 'across' space for number in words dict
-                    words[str(counter)][0].extend([0, '', "clue", [] ])
-                
-                # if square is the start of vertical word
-                if word_down:
-                    # add number to the down grid
-                    down[row][column] = counter
-                    # fill 'down' space for number in words dict
-                    words[str(counter)][1].extend([0, '', "clue", [] ])
 
-    
-    # Put numbers in 'across' and 'down' grid templates
-    # and put letters in 'words'
-    for row in range(rows):
-        for column in range(columns):
-            # check across array at coordinate
-            if across[row][column] > 0:
-                words[str(across[row][column])][0][0] += 1
-                words[str(across[row][column])][0][1] += letters[row][column]
-            elif across[row][column] == 0:
-                if across[row][column-1] > 0:
-                    across[row][column] += across[row][column-1]
+                    # if square is in the rightmost column
+                    # (but not in top or bottom row, bc we already covered that)
+                    elif column == range(columns)[-1]:
+                        # REGULAR VERTICAL CHECK ONLY: if the square above is black
+                        #                              and the one below is white
+                        if grid[row-1][column] == 0 and grid[row+1][column] == 1:
+                            give_num = True
+                            word_down = True
+
+                    else: # square is not at any edge
+                        # REGULAR HORIZONTAL CHECK: if the square to its left is black
+                        #                           and the one to its right is white
+                        if grid[row][column-1] == 0 and grid[row][column+1] == 1:
+                            give_num = True
+                            word_across = True
+                        # REGULAR VERTICAL CHECK: if the square above is black
+                        #                         and the one below is white
+                        if grid[row-1][column] == 0 and grid[row+1][column] == 1:
+                            give_num = True
+                            word_down = True
+
+                    # if square is the start of a word
+                    if give_num:
+                        # give it a number
+                        counter += 1
+                        numgrid[row][column] = counter
+                        box_num(row, column, counter)
+                        # add number to words dict
+                        words[str(counter)] = [[], []]
+
+                    # if square is the start of horizontal word
+                    if word_across:
+                        # add number to 'across' grid
+                        across[row][column] = counter
+                        # fill 'across' space for number in words dict
+                        words[str(counter)][0].extend([0, '', "clue", [] ])
+
+                    # if square is the start of vertical word
+                    if word_down:
+                        # add number to the down grid
+                        down[row][column] = counter
+                        # fill 'down' space for number in words dict
+                        words[str(counter)][1].extend([0, '', "clue", [] ])
+
+
+        # Put numbers in 'across' and 'down' grid templates
+        # and put letters in 'words'
+        for row in range(rows):
+            for column in range(columns):
+                # check across array at coordinate
+                if across[row][column] > 0:
                     words[str(across[row][column])][0][0] += 1
                     words[str(across[row][column])][0][1] += letters[row][column]
-            # check down array at coordinate
-            if down[row][column] > 0:
-                words[str(down[row][column])][1][0] += 1
-                words[str(down[row][column])][1][1] += letters[row][column]
-            elif down[row][column] == 0:
-                if down[row-1][column] > 0:
-                    down[row][column] += down[row-1][column]
+                elif across[row][column] == 0:
+                    if across[row][column-1] > 0:
+                        across[row][column] += across[row][column-1]
+                        words[str(across[row][column])][0][0] += 1
+                        words[str(across[row][column])][0][1] += letters[row][column]
+                # check down array at coordinate
+                if down[row][column] > 0:
                     words[str(down[row][column])][1][0] += 1
                     words[str(down[row][column])][1][1] += letters[row][column]
+                elif down[row][column] == 0:
+                    if down[row-1][column] > 0:
+                        down[row][column] += down[row-1][column]
+                        words[str(down[row][column])][1][0] += 1
+                        words[str(down[row][column])][1][1] += letters[row][column]
 
 
-    # Draw letters
-    for row in range(rows):
-        for column in range(columns):
-            # if square is white
-            if grid[row][column] == 1:
-                ignore = ['#', '.']
-                if letters[row][column] not in ignore:
-                    box_let(row, column, letters[row][column])
-    
-    # Update the screen with what we've drawn
-    pygame.display.flip()
- 
-    # Limit to 60 frames per second
-    clock.tick(60)
+        # Draw letters
+        for row in range(rows):
+            for column in range(columns):
+                # if square is white
+                if grid[row][column] == 1:
+                    ignore = ['#', '.']
+                    if letters[row][column] not in ignore:
+                        box_let(row, column, letters[row][column])
+
+        # Update the screen with what we've drawn
+        pygame.display.flip()
+        #print("DEBUG\tUpdated screen!")
+        
+        # Change 'update' to False
+        update = False
+
  
 # Close the window and quit
 print("INFO\tExiting Gridwords...\n")
