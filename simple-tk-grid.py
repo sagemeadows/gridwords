@@ -10,7 +10,7 @@ with a grid of cells, each cell with a button holding a single letter of text.
 import tkinter as tk
 from colour import Color
 
-PIXELS_PER_CELL_SIDE = 50
+PIXELS_PER_CELL_SIDE = 100
 PIXELS_PER_CELL_MARGIN = 4
 CELLS_PER_GRID_SIDE = 4
 CELLS_PER_GRID = CELLS_PER_GRID_SIDE * CELLS_PER_GRID_SIDE
@@ -37,7 +37,7 @@ GRAY = Color('#d9d9d9')
 # it will have a button with text
 class Cell(tk.Frame):
     # define the "constructor" (aka: ctor) method with some named arguments with default values
-    def __init__(self, master=None, text='.', width=PIXELS_PER_CELL_SIDE, height=PIXELS_PER_CELL_SIDE):
+    def __init__(self, master=None, text='.', width=PIXELS_PER_CELL_SIDE, height=PIXELS_PER_CELL_SIDE, index=-1):
         # initialize base class
         tk.Frame.__init__(self, master=master, width=width, height=height)
 
@@ -51,6 +51,8 @@ class Cell(tk.Frame):
         # declare a 'text' data member for updating the text of the button
         self.text = tk.StringVar()
         self.text.set('.')
+
+        self.index = index
 
         # create a data member called 'button' with 'self' as parent
         self.button = tk.Button(self, textvariable=self.text, command=self.onClick)
@@ -73,13 +75,14 @@ class Cell(tk.Frame):
             color_hex = WHITE.hex
         self.setColor(color_hex)
 
-        # TODO: tell our master widget (e.g. the CellGrid) that we've been clicked
-        # so that it can update the color/status of our symmetric Cell in the grid
-        # TODO: store self.index so we can send it to master in this call
-        #self.master.onCellClick(self.index)
+        # tell the grid to make the symmetric counterpart cell agree
+        self.master.onCellClick(self.index)
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
+
+    def getColor(self):
+        return self.button.cget('background')
 
 # create a CellGrid class that derives from tk.Frame
 # it will have a grid of Cells
@@ -93,7 +96,7 @@ class CellGrid(tk.Frame):
         self.cells = []
         for i in range(CELLS_PER_GRID):
             # create a Cell with 'self' as parent
-            cell = Cell(self)
+            cell = Cell(self, index=i)
 
             # set cell's grid in this Frame
             column = int(i % CELLS_PER_GRID_SIDE)
@@ -101,10 +104,21 @@ class CellGrid(tk.Frame):
             cell.grid(row=row, column=column)
 
             # DEBUG HACK: for now we populate cell with a unique letter of the alphabet
-            t = chr(ord('A') + i)
-            cell.setText(t)
+            #t = chr(ord('A') + i)
+            #cell.setText(t)
             self.cells.append(cell)
 
+    def onCellClick(self, index):
+        color_hex = self.cells[index].getColor()
+        column = int(index % CELLS_PER_GRID_SIDE)
+        row = int(index / CELLS_PER_GRID_SIDE)
+
+        other_column = CELLS_PER_GRID_SIDE - column - 1
+        other_row = CELLS_PER_GRID_SIDE - row - 1
+
+        other_index = other_row * CELLS_PER_GRID_SIDE + other_column
+
+        self.cells[other_index].setColor(color_hex)
 
 # this __name__ == "__main__" check will evaluate True when this script is executed directly
 # but False when this script is loaded it as a module
