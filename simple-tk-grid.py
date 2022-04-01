@@ -11,7 +11,7 @@ import tkinter as tk
 from colour import Color
 
 PIXELS_PER_CELL_SIDE = 100
-PIXELS_PER_CELL_MARGIN = 4
+PIXELS_PER_CELL_MARGIN = 2
 CELLS_PER_GRID_SIDE = 4
 CELLS_PER_GRID = CELLS_PER_GRID_SIDE * CELLS_PER_GRID_SIDE
 
@@ -48,14 +48,14 @@ class Cell(tk.Frame):
         self.rowconfigure(0, weight = 1)
         self.columnconfigure(0, weight = 1)
 
-        # declare a 'text' data member for updating the text of the button
-        self.text = tk.StringVar()
-        self.text.set('.')
+        # declare a 'letter' data member for updating the text of the button
+        self.letter = tk.StringVar()
+        self.letter.set('.')
 
         self.index = index
 
         # create a data member called 'button' with 'self' as parent
-        self.button = tk.Button(self, textvariable=self.text, command=self.onClick)
+        self.button = tk.Button(self, textvariable=self.letter, command=self.onClick)
 
         # color button always white
         self.button.configure(background=WHITE.hex, activebackground=WHITE.hex)
@@ -63,9 +63,19 @@ class Cell(tk.Frame):
         # tell button to expand to fill this entire frame
         self.button.grid(stick='NWSE')
 
+        # add a label for the number in the uppper left corner
+        self.clue_index = tk.StringVar()
+        self.clue_index.set(str(index))
+        self.clue_label = tk.Label(self, textvariable=self.clue_index)
+        self.clue_label.configure(background=WHITE.hex, activebackground=WHITE.hex)
+        self.clue_label.place(x=PIXELS_PER_CELL_MARGIN, y=PIXELS_PER_CELL_MARGIN)
+
     def setText(self, text):
         # update self.text variable which will automatically update the self.button's text
         self.text.set(text)
+
+    def setClueIndex(self, index):
+        self.clue_index.set(str(index))
 
     def onClick(self):
         color_hex = self.button.cget('background')
@@ -80,6 +90,7 @@ class Cell(tk.Frame):
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
+        self.clue_label.configure(background=color_hex, activebackground=color_hex)
 
     def getColor(self):
         return self.button.cget('background')
