@@ -14,165 +14,146 @@ import re
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 
-# Define classes
-class Cell(tk.Button):
-    def __init__(self, master, x, y, *args, **kwargs):
-        super().__init__(master, *args, **kwargs)
-        self.x = x
-        self.y = y
-        #self.clue_index
-        #self.letter
-        #self.bind("<Button-1>", lambda : cell_click(x, y))
-
-
 # Print instructions
 instructions = """
 Welcome to Gridwords!
 """
 print(instructions)
 
-# Define colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
-CYAN = (0, 255, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-ORANGE = (255, 165, 0)
-YELLOW = (255, 255, 0)
+# Define colors with hex codes
+WHITE = '#ffffff'
+BLACK = '#000000'
+GRAY = '#d9d9d9'
+BLUE = '#0000ff'
+CYAN = '#00ffff'
+GREEN = '#00ff00'
+RED = '#ff0000'
+ORANGE = '#ffa500'
+YELLOW = '#ffff00'
 
-# Set WIDTH and HEIGHT of each grid location
-WIDTH = 40
-HEIGHT = 40
+# Set grid cell square size
+CELL_SIDE = 50
 
 # Set the margin between each cell
-MARGIN = 5
+CELL_MARGIN = 3
+INDEX_MARGIN = 2
 
 ## Get number of rows and columns from user input
 ROWS = int(input(" Enter number of rows: "))
 COLUMNS = int(input(" Enter number of rows: "))
+CELLS_PER_GRID = ROWS * COLUMNS
 print()
 
-# Create arrays
-grid = [] # whether a square is black or white
-numgrid = [] # where words start
-across = [] # where across words are
-down = [] # where down words are
-
-letters = [] # where actual letters go
-working_word = [] # word that's being filled in; highlight yellow
-working_letter = [] # letter that's being filled in; highlight {color?}
-
-poss_nums_across = [] # how many possibilities for across words
-poss_nums_down = [] # how many possibilities for down words
-
-for row in range(ROWS):
-    # Add empty list (row)
-    grid.append([])
-    numgrid.append([])
-    across.append([])
-    down.append([])
-    
-    letters.append([])
-    working_word.append([])
-    working_letter.append([])
-    
-    poss_nums_across.append([])
-    poss_nums_down.append([])
-
-    for column in range(COLUMNS):
-        # Add cell (column)
-        grid[row].append(1)
-        numgrid[row].append(0)
-        across[row].append(-1)
-        down[row].append(-1)
+# Define classes
+class Cell(tk.Frame):
+    def __init__(self, master=None, text='.', width=CELL_SIDE, height=CELL_SIDE, index=-1):
+        # create and format frame
+        tk.Frame.__init__(self, master=master, width=width, height=height, relief=tk.FLAT, bg=BLACK, bd=0)
+        self.grid_propagate(0)
+        self.rowconfigure(0, weight = 1)
+        self.columnconfigure(0, weight = 1)
         
-        letters[row].append('.')
-        working_word[row].append(0)
-        working_letter[row].append(0)
-        
-        poss_nums_across[row].append(100)
-        poss_nums_down[row].append(100)
+        # declare a 'letter' data member for updating the text of the button
+        self.letter = tk.StringVar()
+        self.letter.set('.')
+
+        self.index = index
+
+        # create a data member called 'button' with 'self' as parent
+        self.button = tk.Button(self, textvariable=self.letter, command=self.onClick)
+
+        # color button always white
+        self.button.configure(background=WHITE, activebackground=WHITE, relief=tk.FLAT, bd=0)
+
+        # tell button to expand to fill this entire frame
+        self.button.grid(stick='NWSE')
+
+        # add a label for the number in the uppper left corner
+        self.clue_index = tk.StringVar()
+        self.clue_index.set(str(index))
+        self.clue_label = tk.Label(self, textvariable=self.clue_index)
+        self.clue_label.configure(background=WHITE, activebackground=WHITE)
+        self.clue_label.place(x=INDEX_MARGIN, y=INDEX_MARGIN)
+
+    def setText(self, text):
+        # update self.text variable which will automatically update the self.button's text
+        self.text.set(text)
+
+    def setClueIndex(self, index):
+        self.clue_index.set(str(index))
+
+    def onClick(self):
+        if mode == 'grid':
+            color_hex = self.button.cget('background')
+            if color_hex == WHITE:
+                color_hex = BLACK
+            else:
+                color_hex = WHITE
+            self.setColor(color_hex)
+            
+            # tell the grid to make the symmetric counterpart cell agree
+            self.master.onCellClick(self.index)
+        elif mode == 'fill':
+            print(f"Clicked on cell at ({self.x}, {self.y})")
+
+    def setColor(self, color_hex):
+        self.button.configure(background=color_hex, activebackground=color_hex)
+        self.clue_label.configure(background=color_hex, activebackground=color_hex)
+
+    def getColor(self):
+        return self.button.cget('background')
+
+
+# create a CellGrid class that derives from tk.Frame
+# it will have a grid of Cells
+class CellGrid(tk.Frame):
+    # define the ctor method 
+    def __init__(self, master=None):
+        # initialize the base class
+        tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
+
+        # create the member variable 'cells'
+        self.cells = []
+        for i in range(CELLS_PER_GRID):
+            # create a Cell with 'self' as parent
+            cell = Cell(self, index=i)
+
+            # set cell's grid in this Frame
+            column = int(i % COLUMNS)
+            row = int(i / ROWS)
+            cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
+
+            # DEBUG HACK: for now we populate cell with a unique letter of the alphabet
+            #t = chr(ord('A') + i)
+            #cell.setText(t)
+            self.cells.append(cell)
+
+    def onCellClick(self, index):
+        color_hex = self.cells[index].getColor()
+        column = int(index % COLUMNS)
+        row = int(index / ROWS)
+
+        other_column = COLUMNS - column - 1
+        other_row = ROWS - row - 1
+
+        other_index = CELLS_PER_GRID - index - 1
+
+        self.cells[other_index].setColor(color_hex)
+
 
 # Initial mode
 mode = 'grid'
 
 # Define functions
-def change_mode():
+def changeMode():
     global mode
     if mode == 'grid':
         mode = 'fill'
-        btn_chmd = tk.Button(frm_buttons, text="Word-Filling Mode", command=change_mode)
-        btn_chmd.grid(row=0, column=0, sticky="ew", padx=MARGIN, pady=MARGIN)
+        lbl_mode["text"] = "You are in Word-Filling Mode"
     elif mode == 'fill':
         mode = 'grid'
-        btn_chmd = tk.Button(frm_buttons, text="Grid-Editing Mode", command=change_mode)
-        btn_chmd.grid(row=0, column=0, sticky="ew", padx=MARGIN, pady=MARGIN)
+        lbl_mode["text"] = "You are in Grid-Editing Mode"
 
-def opp_coords(row, column):
-    opp_row = range(ROWS)[0-row-1]
-    opp_col = range(COLUMNS)[0-column-1]
-    return opp_row, opp_col
-
-def cell_click(row, column):
-    global mode
-    if mode == 'grid':
-        if grid[row][column] == 1:
-            grid[row][column] = 0
-            grid[0-row-1][0-column-1] = 0
-            opp_row, opp_col = opp_coords(row, column)
-            
-            exec(f'frm{row}_{column}.destroy()')
-            exec(f'frm{row}_{column} = tk.Frame(master=frm_grid, height=40, width=40,relief=tk.FLAT, bd=2, bg="black")')
-            exec(f'frm{row}_{column}.grid_propagate(False)')
-            exec(f'frm{row}_{column}.columnconfigure(0, weight=1)')
-            exec(f'frm{row}_{column}.rowconfigure(0, weight=1)')
-            exec(f'frm{row}_{column}.grid(row={row}, column={column})')
-            exec(f'btn{row}_{column} = Cell(frm{row}_{column}, {row}, {column}, text="({row}, {column})", \
-                   height=40, width=40, bg="black", activebackground="#28211b", relief=tk.FLAT, \
-                   command=lambda : cell_click({row}, {column})).grid(sticky="news")')
-            
-            exec(f'frm{opp_row}_{opp_col}.destroy()')
-            exec(f'frm{opp_row}_{opp_col} = tk.Frame(master=frm_grid, height=40, width=40,relief=tk.FLAT, bd=2, bg="black")')
-            exec(f'frm{opp_row}_{opp_col}.grid_propagate(False)')
-            exec(f'frm{opp_row}_{opp_col}.columnconfigure(0, weight=1)')
-            exec(f'frm{opp_row}_{opp_col}.rowconfigure(0, weight=1)')
-            exec(f'frm{opp_row}_{opp_col}.grid(row={opp_row}, column={opp_col})')
-            exec(f'btn{opp_row}_{opp_col} = Cell(frm{opp_row}_{opp_col}, {opp_row}, {opp_col}, text="({opp_row}, {opp_col})", \
-                   height=40, width=40, bg="black", activebackground="#28211b", relief=tk.FLAT, \
-                   command=lambda : cell_click({opp_row}, {opp_col})).grid(sticky="news")')
-            
-            print(f"Turned box black at ({row}, {column}) and ({opp_row}, {opp_col})")
-            
-        elif grid[row][column] == 0:
-            grid[row][column] = 1
-            grid[0-row-1][0-column-1] = 1
-            opp_row, opp_col = opp_coords(row, column)
-            
-            exec(f'frm{row}_{column}.destroy()')
-            exec(f'frm{row}_{column} = tk.Frame(master=frm_grid, height=40, width=40,relief=tk.FLAT, bd=2, bg="black")')
-            exec(f'frm{row}_{column}.grid_propagate(False)')
-            exec(f'frm{row}_{column}.columnconfigure(0, weight=1)')
-            exec(f'frm{row}_{column}.rowconfigure(0, weight=1)')
-            exec(f'frm{row}_{column}.grid(row={row}, column={column})')
-            exec(f'btn{row}_{column} = Cell(frm{row}_{column}, {row}, {column}, text="({row}, {column})", \
-                   height=40, width=40, bg="white", relief=tk.FLAT, \
-                   command=lambda : cell_click({row}, {column})).grid(sticky="news")')
-            
-            exec(f'frm{opp_row}_{opp_col}.destroy()')
-            exec(f'frm{opp_row}_{opp_col} = tk.Frame(master=frm_grid, height=40, width=40,relief=tk.FLAT, bd=2, bg="black")')
-            exec(f'frm{opp_row}_{opp_col}.grid_propagate(False)')
-            exec(f'frm{opp_row}_{opp_col}.columnconfigure(0, weight=1)')
-            exec(f'frm{opp_row}_{opp_col}.rowconfigure(0, weight=1)')
-            exec(f'frm{opp_row}_{opp_col}.grid(row={opp_row}, column={opp_col})')
-            exec(f'btn{opp_row}_{opp_col} = Cell(frm{opp_row}_{opp_col}, {opp_row}, {opp_col}, text="({opp_row}, {opp_col})", \
-                   height=40, width=40, bg="white", relief=tk.FLAT, \
-                   command=lambda : cell_click({opp_row}, {opp_col})).grid(sticky="news")')
-            
-            print(f"Turned box white at ({row}, {column}) and ({opp_row}, {opp_col})")
-    
-    elif mode == 'fill':
-        print(f"Clicked on box at ({row}, {column})")
 
 def open_file():
     """Open a file for editing."""
@@ -200,74 +181,47 @@ def save_file():
         output_file.write(text)
     window.title(f"Simple Text Editor - {filepath}")
 
-# Establish window
-window = tk.Tk()
-window.title("Gridwords")
-window.configure(bg='white')
-#window.rowconfigure([0, 1, 2], minsize=400, weight=1)
-#window.columnconfigure([0, 1, 2], minsize=400, weight=1)
+# this __name__ == "__main__" check will evaluate True when this script is executed directly
+# but False when this script is loaded it as a module
+if __name__ == "__main__":
+    # a root Tk window would be created for us automatically if we neglected to do so
+    # but create it explicitly here
+    root_window = tk.Tk()
+    root_window.title("Gridwords")
+    root_window.configure(bg='white')
 
-frm_buttons = tk.Frame(window, relief=tk.FLAT, bd=2, bg="white")
+    # create gridwords logo in top left corner
+    logo = tk.Label(root_window, text="LOGO", background=YELLOW)
+    logo.grid(row=0, column=0)
+    
+    # create top bar with mode button
+    frm_topbar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
+    frm_topbar.grid(row=0, column=1)
+    # create mode label
+    lbl_mode = tk.Label(frm_topbar, text="You are in Grid-Editing Mode", bd=2, bg=WHITE)
+    lbl_mode.grid(row=0, column=0)
+    # create mode button
+    btn_chmd = tk.Button(frm_topbar, text="Change Mode", command=changeMode)
+    btn_chmd.grid(row=0, column=1)
+    
+    # create sidebar
+    frm_sidebar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
+    frm_sidebar.grid(row=1, column=0)
+    # create buttons to go in sidebar
+    btn_resize = tk.Button(frm_sidebar, text="Resize")#, command=resize)
+    btn_resize.grid(row=0, column=0, padx=5, pady=5)
+    
+    btn_open = tk.Button(frm_sidebar, text="Open", command=open_file)
+    btn_open.grid(row=1, column=0, padx=5, pady=5)
 
-btn_chmd = tk.Button(frm_buttons, text="Grid-Editing Mode", command=change_mode)
-btn_chmd.grid(row=0, column=0, sticky="e", padx=MARGIN, pady=MARGIN)
+    btn_save = tk.Button(frm_sidebar, text="Save As...", command=save_file)
+    btn_save.grid(row=2, column=0, padx=5)
+    
+    # create a CellGrid and pack it into its parent (e.g. root_window)
+    cell_grid = CellGrid(root_window)
+    cell_grid.grid(row=1, column=1)
+    
+    # start handling UI events
+    root_window.mainloop()
 
-btn_open = tk.Button(frm_buttons, text="Open", command=open_file)
-btn_open.grid(row=0, column=1, sticky="w", padx=5, pady=5)
-
-btn_save = tk.Button(frm_buttons, text="Save As...", command=save_file)
-btn_save.grid(row=0, column=2, sticky="w", padx=5)
-
-frm_grid = tk.Frame(window, relief=tk.FLAT, bd=2, bg="black")
-for row in range(ROWS):
-    for column in range(COLUMNS):
-        #exec(f'btn{row}_{column} = tk.Button(frm_grid, text="({row}, {column})", command=open_file)')
-        #exec(f'frm{row}_{column} = tk.Frame(master=btn{row}_{column}, height=40, width=40, relief=tk.FLAT, bg="white").pack()')
-        #exec(f'btn{row}_{column}.grid(row={row}, column={column}, padx=MARGIN, pady=MARGIN)')
-        
-        #exec(f'frm{row}_{column} = tk.Frame(master=frm_grid, height=40, width=40,relief=tk.FLAT, bd=2, bg="black")')
-        #exec(f'frm{row}_{column}.grid(row={row}, column={column})')
-        #exec(f'btn{row}_{column} = tk.Button(frm{row}_{column}, text="({row}, {column})", \
-        #       bg="white", relief=tk.FLAT, command=open_file).pack()')
-
-        exec(f'frm{row}_{column} = tk.Frame(master=frm_grid, height=40, width=40,relief=tk.FLAT, bd=2, bg="black")')
-        exec(f'frm{row}_{column}.grid_propagate(False)')
-        exec(f'frm{row}_{column}.columnconfigure(0, weight=1)')
-        exec(f'frm{row}_{column}.rowconfigure(0, weight=1)')
-        exec(f'frm{row}_{column}.grid(row={row}, column={column})')
-        exec(f'btn{row}_{column} = Cell(frm{row}_{column}, {row}, {column}, text="({row}, {column})", \
-               height=40, width=40, bg="white", relief=tk.FLAT, \
-               command=lambda : cell_click({row}, {column})).grid(sticky="news")')
-
-frm_buttons.grid(row=0, column=0)
-frm_grid.grid(row=1, column=0)
-
-# Establish frames
-#
-#frm_posswords = tk.Frame(window)
-#
-#frm_clues = tk.Frame(window)
-
-#frm_acr = tk.Frame(frm_clues)
-#frm_dwn = tk.Frame(frm_clues)
-
-
-
-
-
-#frm_buttons.grid(row=0, column=0)
-#frm_grid.grid(row=1, column=0)
-#frm_clues.grid(row=2, column=0)
-#frm_posswords.grid(row=1, column=1)
-
-#btn_decrease = tk.Button(master=window, text="-", command=decrease)
-#btn_decrease.grid(row=0, column=0, sticky="nsew")
-
-#lbl_value = tk.Label(master=window, text="0")
-#lbl_value.grid(row=0, column=1)
-
-#btn_increase = tk.Button(master=window, text="+", command=increase)
-#btn_increase.grid(row=0, column=2, sticky="nsew")
-
-window.mainloop()
 
