@@ -12,7 +12,10 @@ import sys
 import os
 import re
 import tkinter as tk
-from tkinter.filedialog import askopenfilename, asksaveasfilename
+
+# Import functions from local modules
+from indices import updateClueIndices
+from handleFiles import open_file, save_file
 
 # Print instructions
 instructions = """
@@ -44,9 +47,21 @@ COLUMNS = int(input(" Enter number of rows: "))
 CELLS_PER_GRID = ROWS * COLUMNS
 print()
 
+# DEBUG
+i = 0
+for row in range(ROWS):
+    for column in range(COLUMNS):
+        i += 1
+        #print(f"DEBUG {i}")
+# This seems to be needed, otherwise I get 
+# "NameError: name 'row' is not defined" 
+# for the __init__ line in Cell,
+# and I don't know why.
+
+
 # Define classes
 class Cell(tk.Frame):
-    def __init__(self, master=None, text='.', width=CELL_SIDE, height=CELL_SIDE, index=-1):
+    def __init__(self, master=None, row=row, column=column, text='.', width=CELL_SIDE, height=CELL_SIDE):
         # create and format frame
         tk.Frame.__init__(self, master=master, width=width, height=height, relief=tk.FLAT, bg=BLACK, bd=0)
         self.grid_propagate(0)
@@ -57,7 +72,8 @@ class Cell(tk.Frame):
         self.letter = tk.StringVar()
         self.letter.set('.')
 
-        self.index = index
+        self.row = row
+        self.column = column
 
         # create a data member called 'button' with 'self' as parent
         self.button = tk.Button(self, textvariable=self.letter, command=self.onClick)
@@ -70,10 +86,16 @@ class Cell(tk.Frame):
 
         # add a label for the number in the uppper left corner
         self.clue_index = tk.StringVar()
-        self.clue_index.set(str(index))
+        self.clue_index.set(str())
         self.clue_label = tk.Label(self, textvariable=self.clue_index)
         self.clue_label.configure(background=WHITE, activebackground=WHITE)
         self.clue_label.place(x=INDEX_MARGIN, y=INDEX_MARGIN)
+        
+        self.across_num = 0
+        self.across_pos = -1
+        
+        self.down_num = 0
+        self.down_pos = -1
 
     def setText(self, text):
         # update self.text variable which will automatically update the self.button's text
@@ -84,7 +106,8 @@ class Cell(tk.Frame):
 
     def onClick(self):
         if mode == 'grid':
-            color_hex = self.button.cget('background')
+            color_hex = self.button['background']
+            #color_hex = self.button.cget('background')
             if color_hex == WHITE:
                 color_hex = BLACK
             else:
@@ -92,9 +115,9 @@ class Cell(tk.Frame):
             self.setColor(color_hex)
             
             # tell the grid to make the symmetric counterpart cell agree
-            self.master.onCellClick(self.index)
+            self.master.onCellClick(self.row, self.column)
         elif mode == 'fill':
-            print(f"Clicked on cell at ({self.x}, {self.y})")
+            print(f"DEBUG\tClicked on cell at ({self.column}, {self.row})")
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
@@ -112,33 +135,50 @@ class CellGrid(tk.Frame):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
 
-        # create the member variable 'cells'
+        # create cells array
         self.cells = []
-        for i in range(CELLS_PER_GRID):
-            # create a Cell with 'self' as parent
-            cell = Cell(self, index=i)
+        # create other arrays
+        #self.colorgrid = [] # whether a square is black or white
+        #self.numgrid = [] # where words start
+        #self.across = [] # where across words are
+        #self.down = [] # where down words are
+        
+        for row in range(ROWS):
+            self.cells.append([])
+            
+            #self.colorgrid.append([])
+            #self.numgrid.append([])
+            #self.across.append([])
+            #self.down.append([])
+            
+            for column in range(COLUMNS):
+                # create a Cell with 'self' as parent
+                cell = Cell(self, row=row, column=column)
 
-            # set cell's grid in this Frame
-            column = int(i % COLUMNS)
-            row = int(i / ROWS)
-            cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
+                # set cell's grid in this Frame
+                cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
 
-            # DEBUG HACK: for now we populate cell with a unique letter of the alphabet
-            #t = chr(ord('A') + i)
-            #cell.setText(t)
-            self.cells.append(cell)
+                self.cells[row].append(cell)
+                
+                #self.colorgrid[row].append(1)
+                #self.numgrid[row].append(0)
+                #self.across[row].append(-1)
+                #self.down[row].append(-1)
+                
+        
+        updateClueIndices(self)
+        
+        #print(f"DEBUG\tCells Grid: {self.cells}")
 
-    def onCellClick(self, index):
-        color_hex = self.cells[index].getColor()
-        column = int(index % COLUMNS)
-        row = int(index / ROWS)
 
-        other_column = COLUMNS - column - 1
-        other_row = ROWS - row - 1
+    def onCellClick(self, row, column):
+        color_hex = self.cells[row][column].getColor()
 
-        other_index = CELLS_PER_GRID - index - 1
+        opp_column = 0 - column - 1
+        opp_row = 0 - row - 1
 
-        self.cells[other_index].setColor(color_hex)
+        self.cells[opp_row][opp_column].setColor(color_hex)
+        updateClueIndices(self)
 
 
 # Initial mode
@@ -154,32 +194,6 @@ def changeMode():
         mode = 'grid'
         lbl_mode["text"] = "You are in Grid-Editing Mode"
 
-
-def open_file():
-    """Open a file for editing."""
-    filepath = askopenfilename(
-        filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
-    )
-    if not filepath:
-        return
-    txt_edit.delete("1.0", tk.END)
-    with open(filepath, mode="r", encoding="utf-8") as input_file:
-        text = input_file.read()
-        txt_edit.insert(tk.END, text)
-    window.title(f"Simple Text Editor - {filepath}")
-
-def save_file():
-    """Save the current file as a new file."""
-    filepath = asksaveasfilename(
-        defaultextension=".txt",
-        filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
-    )
-    if not filepath:
-        return
-    with open(filepath, mode="w", encoding="utf-8") as output_file:
-        text = txt_edit.get("1.0", tk.END)
-        output_file.write(text)
-    window.title(f"Simple Text Editor - {filepath}")
 
 # this __name__ == "__main__" check will evaluate True when this script is executed directly
 # but False when this script is loaded it as a module
@@ -223,5 +237,4 @@ if __name__ == "__main__":
     
     # start handling UI events
     root_window.mainloop()
-
 
