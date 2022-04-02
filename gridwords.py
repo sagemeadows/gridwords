@@ -42,10 +42,13 @@ CELL_MARGIN = 3
 INDEX_MARGIN = 2
 
 ## Get number of rows and columns from user input
-ROWS = int(input(" Enter number of rows: "))
-COLUMNS = int(input(" Enter number of rows: "))
-CELLS_PER_GRID = ROWS * COLUMNS
-print()
+#ROWS = int(input(" Enter number of rows: "))
+#COLUMNS = int(input(" Enter number of rows: "))
+#CELLS_PER_GRID = ROWS * COLUMNS
+#print()
+
+ROWS = 3
+COLUMNS = 3
 
 # DEBUG
 i = 0
@@ -134,7 +137,11 @@ class CellGrid(tk.Frame):
     def __init__(self, master=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
+        #self.grid(master, row=1, column=1)
 
+        #self.rows = ROWS
+        #self.columns = COLUMNS
+        
         # create cells array
         self.cells = []
         # create other arrays
@@ -185,7 +192,65 @@ class CellGrid(tk.Frame):
 mode = 'grid'
 
 # Define functions
-def changeMode():
+def buildWindow(root_window):
+    # Create gridwords logo in top left corner (TODO)
+    logo = tk.Label(root_window, text="LOGO", background=YELLOW) # temporary
+    logo.grid(row=0, column=0, sticky="nw")
+    
+    # Create sidebar
+    frm_sidebar = tk.Frame(root_window, relief=tk.FLAT, bd=20, bg=WHITE)
+    frm_sidebar.grid(row=1, column=0)
+    #global frames_dict
+    #frames_dict["frm_sidebar"] = frm_sidebar
+    
+    # create things to go in sidebar
+    lbl_rows = tk.Label(frm_sidebar, text="Number of rows:", bg=WHITE)
+    lbl_rows.grid(row=0, column=0)
+    ent_rows = tk.Entry(frm_sidebar, width=3, highlightcolor=YELLOW)
+    ent_rows.grid(row=0, column=1)
+    
+    lbl_columns = tk.Label(frm_sidebar, text="Number of columns:", bg=WHITE)
+    lbl_columns.grid(row=1, column=0)
+    ent_columns = tk.Entry(frm_sidebar, width=3, highlightcolor=YELLOW)
+    ent_columns.grid(row=1, column=1)
+    
+    btn_mk_grid = tk.Button(frm_sidebar, text="Create Grid", command=lambda : createGrid(root_window, ent_rows, ent_columns))
+    btn_mk_grid.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+    
+    btn_open = tk.Button(frm_sidebar, text="Open", command=open_file)
+    btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+
+    btn_save = tk.Button(frm_sidebar, text="Save As...", command=save_file)
+    btn_save.grid(row=4, column=0, columnspan=2, padx=5)
+
+def createGrid(root_window, ent_rows, ent_columns):
+    global frames_dict
+    for key,frame in frames_dict.items():
+        frame.destroy()
+    global ROWS
+    global COLUMNS
+    ROWS = int(ent_rows.get())
+    COLUMNS = int(ent_columns.get())
+    cell_grid = CellGrid(root_window)#, rows=rows, columns=columns)
+    cell_grid.grid(row=1, column=1)
+    frames_dict["cell_grid"] = cell_grid
+    
+    # Create top bar with mode button
+    frm_topbar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
+    frm_topbar.grid(row=0, column=1)
+    frames_dict["frm_topbar"] = frm_topbar
+    
+    # create mode label
+    lbl_mode = tk.Label(frm_topbar, text="You are in Grid-Editing Mode", bd=2, bg=WHITE)
+    lbl_mode.grid(row=0, column=0)
+    
+    # create mode button
+    global mode
+    mode = 'grid'
+    btn_chmd = tk.Button(frm_topbar, text="Change Mode", command=lambda : changeMode(lbl_mode))
+    btn_chmd.grid(row=0, column=1)
+
+def changeMode(lbl_mode):
     global mode
     if mode == 'grid':
         mode = 'fill'
@@ -202,38 +267,18 @@ if __name__ == "__main__":
     # but create it explicitly here
     root_window = tk.Tk()
     root_window.title("Gridwords")
-    root_window.configure(bg='white')
+    root_window.configure(bg=WHITE)
+    
+    # create dictionary to keep track of frames
+    # that may later need to be updated
+    # (via deletion and recreation)
+    frames_dict = {}
 
-    # create gridwords logo in top left corner
-    logo = tk.Label(root_window, text="LOGO", background=YELLOW)
-    logo.grid(row=0, column=0)
-    
-    # create top bar with mode button
-    frm_topbar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
-    frm_topbar.grid(row=0, column=1)
-    # create mode label
-    lbl_mode = tk.Label(frm_topbar, text="You are in Grid-Editing Mode", bd=2, bg=WHITE)
-    lbl_mode.grid(row=0, column=0)
-    # create mode button
-    btn_chmd = tk.Button(frm_topbar, text="Change Mode", command=changeMode)
-    btn_chmd.grid(row=0, column=1)
-    
-    # create sidebar
-    frm_sidebar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
-    frm_sidebar.grid(row=1, column=0)
-    # create buttons to go in sidebar
-    btn_resize = tk.Button(frm_sidebar, text="Resize")#, command=resize)
-    btn_resize.grid(row=0, column=0, padx=5, pady=5)
-    
-    btn_open = tk.Button(frm_sidebar, text="Open", command=open_file)
-    btn_open.grid(row=1, column=0, padx=5, pady=5)
-
-    btn_save = tk.Button(frm_sidebar, text="Save As...", command=save_file)
-    btn_save.grid(row=2, column=0, padx=5)
+    buildWindow(root_window)
     
     # create a CellGrid and pack it into its parent (e.g. root_window)
-    cell_grid = CellGrid(root_window)
-    cell_grid.grid(row=1, column=1)
+    #cell_grid = CellGrid(root_window)
+    #cell_grid.grid(row=1, column=1)
     
     # start handling UI events
     root_window.mainloop()
