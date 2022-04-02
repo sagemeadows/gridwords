@@ -41,30 +41,14 @@ CELL_SIDE = 50
 CELL_MARGIN = 3
 INDEX_MARGIN = 2
 
-## Get number of rows and columns from user input
-#ROWS = int(input(" Enter number of rows: "))
-#COLUMNS = int(input(" Enter number of rows: "))
-#CELLS_PER_GRID = ROWS * COLUMNS
-#print()
-
+# Set temporary/default rows & columns
 ROWS = 3
 COLUMNS = 3
-
-# DEBUG
-i = 0
-for row in range(ROWS):
-    for column in range(COLUMNS):
-        i += 1
-        #print(f"DEBUG {i}")
-# This seems to be needed, otherwise I get 
-# "NameError: name 'row' is not defined" 
-# for the __init__ line in Cell,
-# and I don't know why.
 
 
 # Define classes
 class Cell(tk.Frame):
-    def __init__(self, master=None, row=row, column=column, text='.', width=CELL_SIDE, height=CELL_SIDE):
+    def __init__(self, master=None, text='.', width=CELL_SIDE, height=CELL_SIDE):
         # create and format frame
         tk.Frame.__init__(self, master=master, width=width, height=height, relief=tk.FLAT, bg=BLACK, bd=0)
         self.grid_propagate(0)
@@ -75,8 +59,8 @@ class Cell(tk.Frame):
         self.letter = tk.StringVar()
         self.letter.set('.')
 
-        self.row = row
-        self.column = column
+        self.row = -1
+        self.column = -1
 
         # create a data member called 'button' with 'self' as parent
         self.button = tk.Button(self, textvariable=self.letter, command=self.onClick)
@@ -120,7 +104,7 @@ class Cell(tk.Frame):
             # tell the grid to make the symmetric counterpart cell agree
             self.master.onCellClick(self.row, self.column)
         elif mode == 'fill':
-            print(f"DEBUG\tClicked on cell at ({self.column}, {self.row})")
+            print(f"DEBUG\tClicked on cell at ({self.row}, {self.column})")
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
@@ -138,13 +122,10 @@ class CellGrid(tk.Frame):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
         #self.grid(master, row=1, column=1)
-
-        #self.rows = ROWS
-        #self.columns = COLUMNS
         
         # create cells array
         self.cells = []
-        # create other arrays
+        ## create other arrays
         #self.colorgrid = [] # whether a square is black or white
         #self.numgrid = [] # where words start
         #self.across = [] # where across words are
@@ -160,12 +141,14 @@ class CellGrid(tk.Frame):
             
             for column in range(COLUMNS):
                 # create a Cell with 'self' as parent
-                cell = Cell(self, row=row, column=column)
+                cell = Cell(self)#, row=row, column=column)
 
                 # set cell's grid in this Frame
                 cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
 
                 self.cells[row].append(cell)
+                self.cells[row][column].row = row
+                self.cells[row][column].column = column
                 
                 #self.colorgrid[row].append(1)
                 #self.numgrid[row].append(0)
@@ -275,10 +258,6 @@ if __name__ == "__main__":
     frames_dict = {}
 
     buildWindow(root_window)
-    
-    # create a CellGrid and pack it into its parent (e.g. root_window)
-    #cell_grid = CellGrid(root_window)
-    #cell_grid.grid(row=1, column=1)
     
     # start handling UI events
     root_window.mainloop()
