@@ -14,7 +14,7 @@ import re
 import tkinter as tk
 
 # Import functions from local modules
-from indices import updateClueIndices
+from indices import updateClueIndices, spreadIndices
 from handleFiles import open_file, save_file
 
 # Print instructions
@@ -131,6 +131,8 @@ class CellGrid(tk.Frame):
         #self.across = [] # where across words are
         #self.down = [] # where down words are
         
+        self.words = {}
+        
         for row in range(ROWS):
             self.cells.append([])
             
@@ -157,6 +159,7 @@ class CellGrid(tk.Frame):
                 
         
         updateClueIndices(self)
+        spreadIndices(self)
         
         #print(f"DEBUG\tCells Grid: {self.cells}")
 
@@ -169,6 +172,7 @@ class CellGrid(tk.Frame):
 
         self.cells[opp_row][opp_column].setColor(color_hex)
         updateClueIndices(self)
+        spreadIndices(self)
 
 
 # Initial mode

@@ -13,10 +13,24 @@ BLACK = '#000000'
 
 def updateClueIndices(cellgrid):
     counter = 0
+    cellgrid.words = {}
     for row in range(len(cellgrid.cells)):
         for column in range(len(cellgrid.cells[0])):
+            # clear any old positions
+            #cellgrid.cells[row][column].across_word_start = False
+            #cellgrid.cells[row][column].across_word_member = False
+            #cellgrid.cells[row][column].down_word_start = False
+            #cellgrid.cells[row][column].down_word_member = False
+            cellgrid.cells[row][column].across_pos = -1
+            cellgrid.cells[row][column].down_pos = -1
+            
             # if cell is white
             if cellgrid.cells[row][column].getColor() == WHITE:
+                # clear any old directions indices to 0
+                cellgrid.cells[row][column].across_num = 0
+                cellgrid.cells[row][column].down_num = 0
+                
+                
                 give_num = False
                 word_across = False
                 word_down = False
@@ -116,28 +130,98 @@ def updateClueIndices(cellgrid):
                     counter += 1
                     cellgrid.cells[row][column].setClueIndex(counter)
                     #cellgrid.numgrid[row][column] = counter
-                    # add number to words dict (how?)
-                    #words[str(counter)] = [[], []]
+                    
+                    # add number to words dict
+                    cellgrid.words[str(counter)] = [[], []]
                 else:
                     cellgrid.cells[row][column].setClueIndex('')
                  
                 # if cell is the start of a horizontal word
                 if word_across:
+                    cellgrid.cells[row][column].across_word_start = True
                     #cellgrid.across[row][column] = counter
                     cellgrid.cells[row][column].across_num = counter
-                    cellgrid.cells[row][column].across_pos = 0
-                    # fill 'across' space for number in words dict (how)
-                    #words[str(counter)][0].extend([0, '', "clue", [] ])
+                    #cellgrid.cells[row][column].across_pos = 0
+                    # fill 'across' space for number in words dict
+                    cellgrid.words[str(counter)][0].extend([0, '', "clue", [] ])
+                else:
+                    cellgrid.cells[row][column].across_word_start = False
       
                 # if cell is the start of a vertical word
-                #if word_down:
+                if word_down:
                     #cellgrid.down[row][column] = counter
                     cellgrid.cells[row][column].down_num = counter
-                    cellgrid.cells[row][column].down_pos = 0
-                    # fill 'down' space for number in words dict (how)
-                    #words[str(counter)][1].extend([0, '', "clue", [] ])
+                    #cellgrid.cells[row][column].down_pos = 0
+                    # fill 'down' space for number in words dict
+                    cellgrid.words[str(counter)][1].extend([0, '', "clue", [] ])
 
             else: # cell is black
                 cellgrid.cells[row][column].setClueIndex(-1)
+                # clear any old direction indices to -1
+                cellgrid.cells[row][column].across_num = -1
+                cellgrid.cells[row][column].down_num = -1
                 #cellgrid.numgrid[row][column] = -1        
+
+def spreadIndices(cellgrid):
+    # Put numbers in 'across' and 'down' grid templates
+    # and put letters in 'words'
+    for row in range(len(cellgrid.cells)):
+        for column in range(len(cellgrid.cells[0])):
+            # check across array at coordinate.
+            # if cell already has the number of an across word
+            if cellgrid.cells[row][column].across_num > 0:
+                # update length of across word
+                cellgrid.words[str(cellgrid.cells[row][column].across_num)][0][0] += 1
+                # figure out cell's position in the across word
+                # for ease of future word changes
+                # by subtracting 1 from current recorded word length
+                cellgrid.cells[row][column].across_pos = cellgrid.words[str(cellgrid.cells[row][column].across_num)][0][0] - 1
+                # add letter to across word
+                cellgrid.words[str(cellgrid.cells[row][column].across_num)][0][1] += cellgrid.cells[row][column].letter.get()
+            
+            # if the cell is white does not already have the number of an across word
+            elif cellgrid.cells[row][column].across_num == 0:
+                # if the cell has a neighbor to its left 
+                # that does have the number of an across word
+                if column != 0 and cellgrid.cells[row][column-1].across_num > 0:
+                    # make cell's across_num the same as its leftward neighbor
+                    cellgrid.cells[row][column].across_num = cellgrid.cells[row][column-1].across_num
+                    # update length of across word
+                    cellgrid.words[str(cellgrid.cells[row][column].across_num)][0][0] += 1
+                    # figure out cell's position in the across word
+                    # for ease of future word changes
+                    # by subtracting 1 from current recorded word length
+                    cellgrid.cells[row][column].across_pos = cellgrid.words[str(cellgrid.cells[row][column].across_num)][0][0] - 1
+                    # add letter to across word
+                    cellgrid.words[str(cellgrid.cells[row][column].across_num)][0][1] += cellgrid.cells[row][column].letter.get()
+            
+            # check down array at coordinate.
+            # if cell already has the number of a down word
+            if cellgrid.cells[row][column].down_num > 0:
+                # update length of across word
+                cellgrid.words[str(cellgrid.cells[row][column].down_num)][1][0] += 1
+                # figure out cell's position in the down word
+                # for ease of future word changes
+                # by subtracting 1 from the current recorded word length
+                cellgrid.cells[row][column].down_pos = cellgrid.words[str(cellgrid.cells[row][column].down_num)][1][0] - 1
+                # add letter to down word
+                cellgrid.words[str(cellgrid.cells[row][column].down_num)][1][1] += cellgrid.cells[row][column].letter.get()
+            
+            # if the cell is white but does not already have the number of a down word
+            elif cellgrid.cells[row][column].down_num == 0:
+                # if the cell has an upwards neighbor
+                # that does have the number of a down word
+                if row != 0 and cellgrid.cells[row-1][column].down_num > 0:
+                    # make cell's down_num the same as its upwards neighbor
+                    cellgrid.cells[row][column].down_num = cellgrid.cells[row-1][column].down_num
+                    # update length of down word
+                    cellgrid.words[str(cellgrid.cells[row][column].down_num)][1][0] += 1
+                    # figure out cell's position in the down word
+                    # for ease of future word changes
+                    # by subtracting 1 from current recorded word length
+                    cellgrid.cells[row][column].down_pos = cellgrid.words[str(cellgrid.cells[row][column].down_num)][1][0] - 1
+                    # add letter to down word
+                    cellgrid.words[str(cellgrid.cells[row][column].down_num)][1][1] += cellgrid.cells[row][column].letter.get()
+                    
+    print(f"DEBUG\tWords: {cellgrid.words}\n")
 
