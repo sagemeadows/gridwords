@@ -11,6 +11,7 @@
 import sys
 import os
 import re
+import string
 import tkinter as tk
 
 # Import functions from local modules
@@ -92,9 +93,9 @@ class Cell(tk.Frame):
         self.clue_index.set(str(index))
 
     def onClick(self):
+        color_hex = self.button['background']
         if mode == 'grid':
-            color_hex = self.button['background']
-            #color_hex = self.button.cget('background')
+            #color_hex = self.button['background']
             if color_hex == WHITE:
                 color_hex = BLACK
             else:
@@ -104,7 +105,16 @@ class Cell(tk.Frame):
             # tell the grid to make the symmetric counterpart cell agree
             self.master.onCellClick(self.row, self.column)
         elif mode == 'fill':
-            print(f"DEBUG\tClicked on cell at ({self.row}, {self.column})")
+            if color_hex == WHITE:
+                color_hex = CYAN
+                # reset old working letter color, if it exists
+                if self.master.wl[0] > -1:
+                    self.master.cells[self.master.wl[0]][self.master.wl[1]].setColor(WHITE)
+
+                # set new working letter
+                self.master.wl = (self.row, self.column)
+                #print(f"DEBUG\tWorking Cell: {self.master.wl}")
+                self.setColor(color_hex)
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
@@ -112,6 +122,9 @@ class Cell(tk.Frame):
 
     def getColor(self):
         return self.button.cget('background')
+        
+    #def setLetter(self, key):
+    #    self.letter.set(key)
 
 
 # create a CellGrid class that derives from tk.Frame
@@ -121,7 +134,6 @@ class CellGrid(tk.Frame):
     def __init__(self, master=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
-        #self.grid(master, row=1, column=1)
         
         # create cells array
         self.cells = []
@@ -161,6 +173,10 @@ class CellGrid(tk.Frame):
         updateClueIndices(self)
         spreadIndices(self)
         
+        # keep track of working letter coordinates
+        self.wl = (-1, -1)
+        #TODO: add way to keep track of working word?
+        
         #print(f"DEBUG\tCells Grid: {self.cells}")
 
 
@@ -174,6 +190,8 @@ class CellGrid(tk.Frame):
         updateClueIndices(self)
         spreadIndices(self)
 
+    def setCellLetter(self, key):
+        self.cells[self.wl[0]][self.wl[1]].letter.set(key)
 
 # Initial mode
 mode = 'grid'
@@ -218,7 +236,7 @@ def createGrid(root_window, ent_rows, ent_columns):
     global COLUMNS
     ROWS = int(ent_rows.get())
     COLUMNS = int(ent_columns.get())
-    cell_grid = CellGrid(root_window)#, rows=rows, columns=columns)
+    cell_grid = CellGrid(root_window)
     cell_grid.grid(row=1, column=1)
     frames_dict["cell_grid"] = cell_grid
     
@@ -245,7 +263,26 @@ def changeMode(lbl_mode):
     elif mode == 'fill':
         mode = 'grid'
         lbl_mode["text"] = "You are in Grid-Editing Mode"
+        # reset non-black colors to white
+        # by calling for clue index update
+        global frames_dict
+        if "cell_grid" in frames_dict:
+            updateClueIndices(frames_dict["cell_grid"])
+            spreadIndices(frames_dict["cell_grid"])
 
+def handleKeypress(event):
+    global mode
+    global frames_dict
+    if "cell_grid" in frames_dict:
+        if mode == 'fill':
+            key = event.char.upper()
+            if key in string.ascii_uppercase: #ascii_letters:
+                #print(f"DEBUG\tLetter = {event.char}")
+                frames_dict["cell_grid"].setCellLetter(key)
+
+
+def quit(event):
+    root_window.destroy()
 
 # this __name__ == "__main__" check will evaluate True when this script is executed directly
 # but False when this script is loaded it as a module
@@ -262,6 +299,10 @@ if __name__ == "__main__":
     frames_dict = {}
 
     buildWindow(root_window)
+    
+    # bind keypresses
+    root_window.bind("<Key>", handleKeypress)
+    root_window.bind("<Escape>", lambda e: quit(e))
     
     # start handling UI events
     root_window.mainloop()

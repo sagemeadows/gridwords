@@ -12,8 +12,12 @@ WHITE = '#ffffff'
 BLACK = '#000000'
 
 def updateClueIndices(cellgrid):
+    # (re)start counter
     counter = 0
+    # clear any old cellgrid info
     cellgrid.words = {}
+    cellgrid.wl = (-1, -1)
+    
     for row in range(len(cellgrid.cells)):
         for column in range(len(cellgrid.cells[0])):
             # clear any old positions
@@ -23,6 +27,12 @@ def updateClueIndices(cellgrid):
             #cellgrid.cells[row][column].down_word_member = False
             cellgrid.cells[row][column].across_pos = -1
             cellgrid.cells[row][column].down_pos = -1
+            
+            # if cell is colored from word-filling mode,
+            # return it to white
+            if cellgrid.cells[row][column].getColor() != WHITE \
+            and cellgrid.cells[row][column].getColor() != BLACK:
+                cellgrid.cells[row][column].setColor(WHITE)
             
             # if cell is white
             if cellgrid.cells[row][column].getColor() == WHITE:
@@ -160,7 +170,10 @@ def updateClueIndices(cellgrid):
                 # clear any old direction indices to -1
                 cellgrid.cells[row][column].across_num = -1
                 cellgrid.cells[row][column].down_num = -1
-                #cellgrid.numgrid[row][column] = -1        
+                #cellgrid.numgrid[row][column] = -1 
+                # clear any old letter to '.'
+                cellgrid.cells[row][column].letter.set('.')
+
 
 def spreadIndices(cellgrid):
     # Put numbers in 'across' and 'down' grid templates
