@@ -284,20 +284,62 @@ def changeMode(lbl_mode):
 def insertLetter(event):
     global mode
     global frames_dict
-    if "cell_grid" in frames_dict:
-        if mode == 'fill':
-            key = event.char.upper()
-            if key in string.ascii_uppercase: #ascii_letters:
-                #print(f"DEBUG\tLetter = {event.char}")
-                frames_dict["cell_grid"].setCellLetter(key)
+    if mode == 'fill':
+        key = event.char.upper()
+        if key in string.ascii_uppercase: #ascii_letters:
+            #print(f"DEBUG\tLetter = {event.char}")
+            frames_dict["cell_grid"].setCellLetter(key)
 
 def deleteLetter(event):
     global mode
     global frames_dict
-    if "cell_grid" in frames_dict:
-        if mode == 'fill':
-           frames_dict["cell_grid"].setCellLetter('.') 
+    if mode == 'fill':
+       frames_dict["cell_grid"].setCellLetter('.') 
 
+def moveUp(event):
+    global mode
+    global frames_dict
+    if mode == 'fill':
+        row = frames_dict["cell_grid"].wl[0]
+        column = frames_dict["cell_grid"].wl[1]
+        if row != 0 and frames_dict["cell_grid"].cells[row-1][column].getColor() != BLACK:
+            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
+            frames_dict["cell_grid"].wl = (row-1, column)
+            frames_dict["cell_grid"].cells[row-1][column].setColor(CYAN)
+                
+
+def moveDown(event):
+    global mode
+    global frames_dict
+    if mode == 'fill':
+        row = frames_dict["cell_grid"].wl[0]
+        column = frames_dict["cell_grid"].wl[1]
+        if row != range(ROWS)[-1] and frames_dict["cell_grid"].cells[row+1][column].getColor() != BLACK:
+            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
+            frames_dict["cell_grid"].wl = (row+1, column)
+            frames_dict["cell_grid"].cells[row+1][column].setColor(CYAN)
+
+def moveLeft(event):
+    global mode
+    global frames_dict
+    if mode == 'fill':
+        row = frames_dict["cell_grid"].wl[0]
+        column = frames_dict["cell_grid"].wl[1]
+        if column != 0 and frames_dict["cell_grid"].cells[row][column-1].getColor() != BLACK:
+            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
+            frames_dict["cell_grid"].wl = (row, column-1)
+            frames_dict["cell_grid"].cells[row][column-1].setColor(CYAN)
+
+def moveRight(event):
+    global mode
+    global frames_dict
+    if mode == 'fill':
+        row = frames_dict["cell_grid"].wl[0]
+        column = frames_dict["cell_grid"].wl[1]
+        if column != range(COLUMNS)[-1] and frames_dict["cell_grid"].cells[row][column+1].getColor() != BLACK:
+            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
+            frames_dict["cell_grid"].wl = (row, column+1)
+            frames_dict["cell_grid"].cells[row][column+1].setColor(CYAN)
 
 def quit(event):
     root_window.destroy()
@@ -321,6 +363,10 @@ if __name__ == "__main__":
     # bind keypresses
     root_window.bind("<Key>", insertLetter)
     root_window.bind("<BackSpace>", deleteLetter)
+    root_window.bind("<Up>", moveUp)
+    root_window.bind("<Down>", moveDown)
+    root_window.bind("<Left>", moveLeft)
+    root_window.bind("<Right>", moveRight)
     root_window.bind("<Escape>", lambda e: quit(e))
     
     # start handling UI events
