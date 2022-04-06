@@ -281,7 +281,7 @@ def changeMode(lbl_mode):
             updateClueIndices(frames_dict["cell_grid"])
             spreadIndices(frames_dict["cell_grid"])
 
-def handleKeypress(event):
+def insertLetter(event):
     global mode
     global frames_dict
     if "cell_grid" in frames_dict:
@@ -290,6 +290,13 @@ def handleKeypress(event):
             if key in string.ascii_uppercase: #ascii_letters:
                 #print(f"DEBUG\tLetter = {event.char}")
                 frames_dict["cell_grid"].setCellLetter(key)
+
+def deleteLetter(event):
+    global mode
+    global frames_dict
+    if "cell_grid" in frames_dict:
+        if mode == 'fill':
+           frames_dict["cell_grid"].setCellLetter('.') 
 
 
 def quit(event):
@@ -312,7 +319,8 @@ if __name__ == "__main__":
     buildWindow(root_window)
     
     # bind keypresses
-    root_window.bind("<Key>", handleKeypress)
+    root_window.bind("<Key>", insertLetter)
+    root_window.bind("<BackSpace>", deleteLetter)
     root_window.bind("<Escape>", lambda e: quit(e))
     
     # start handling UI events
