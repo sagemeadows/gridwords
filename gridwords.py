@@ -15,7 +15,7 @@ import string
 import tkinter as tk
 
 # Import functions from local modules
-from indices import updateClueIndices, spreadIndices
+from indices import Entry, updateClueIndices, spreadIndices
 from handleFiles import open_file, save_file
 
 # Print instructions
@@ -137,25 +137,15 @@ class CellGrid(tk.Frame):
         
         # create cells array
         self.cells = []
-        ## create other arrays
-        #self.colorgrid = [] # whether a square is black or white
-        #self.numgrid = [] # where words start
-        #self.across = [] # where across words are
-        #self.down = [] # where down words are
         
         self.words = {}
         
         for row in range(ROWS):
             self.cells.append([])
             
-            #self.colorgrid.append([])
-            #self.numgrid.append([])
-            #self.across.append([])
-            #self.down.append([])
-            
             for column in range(COLUMNS):
                 # create a Cell with 'self' as parent
-                cell = Cell(self)#, row=row, column=column)
+                cell = Cell(self)
 
                 # set cell's grid in this Frame
                 cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
@@ -163,11 +153,6 @@ class CellGrid(tk.Frame):
                 self.cells[row].append(cell)
                 self.cells[row][column].row = row
                 self.cells[row][column].column = column
-                
-                #self.colorgrid[row].append(1)
-                #self.numgrid[row].append(0)
-                #self.across[row].append(-1)
-                #self.down[row].append(-1)
                 
         
         updateClueIndices(self)
@@ -189,9 +174,26 @@ class CellGrid(tk.Frame):
         self.cells[opp_row][opp_column].setColor(color_hex)
         updateClueIndices(self)
         spreadIndices(self)
+        
 
     def setCellLetter(self, key):
-        self.cells[self.wl[0]][self.wl[1]].letter.set(key)
+        working_cell = self.cells[self.wl[0]][self.wl[1]]
+        #self.cells[self.wl[0]][self.wl[1]].letter.set(key)
+        working_cell.letter.set(key)
+        # edit words dict
+        if working_cell.across_num > 0:
+            a_index = f'{working_cell.across_num} across'
+            self.words[a_index].letters[working_cell.across_pos] = key
+            self.words[a_index].updateWord()
+            #self.words[str(working_cell.across_num)][0][1][working_cell.across_pos] = key
+        if working_cell.down_num > 0:
+            d_index = f'{working_cell.down_num} down'
+            self.words[d_index].letters[working_cell.down_pos] = key
+            self.words[d_index].updateWord()
+            #self.words[str(working_cell.down_num)][0][1][working_cell.down_pos] = key
+        
+        #print(f"DEBUG\tWords: {self.words}")
+
 
 # Initial mode
 mode = 'grid'
@@ -229,9 +231,13 @@ def buildWindow(root_window):
     btn_save.grid(row=4, column=0, columnspan=2, padx=5)
 
 def createGrid(root_window, ent_rows, ent_columns):
+    # Clear old grid and related frames
     global frames_dict
     for key,frame in frames_dict.items():
         frame.destroy()
+    #frames_dict = {}
+    
+    # Create grid
     global ROWS
     global COLUMNS
     ROWS = int(ent_rows.get())
@@ -244,16 +250,21 @@ def createGrid(root_window, ent_rows, ent_columns):
     frm_topbar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
     frm_topbar.grid(row=0, column=1)
     frames_dict["frm_topbar"] = frm_topbar
-    
     # create mode label
     lbl_mode = tk.Label(frm_topbar, text="You are in Grid-Editing Mode", bd=2, bg=WHITE)
     lbl_mode.grid(row=0, column=0)
-    
     # create mode button
     global mode
     mode = 'grid'
     btn_chmd = tk.Button(frm_topbar, text="Change Mode", command=lambda : changeMode(lbl_mode))
     btn_chmd.grid(row=0, column=1)
+
+def createWIPwords(root_window):
+    global frames_dict
+    if frames_dict["frm_wip_wrds"]:
+        frames_dict["frm_wip_wrds"].destroy()
+    
+    frames_dict["frm_wip_wrds"] = WIPwords(root_window)
 
 def changeMode(lbl_mode):
     global mode
