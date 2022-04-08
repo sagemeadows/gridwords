@@ -121,27 +121,8 @@ class Cell(tk.Frame):
                 self.master.wl = (self.row, self.column)
                 #print(f"DEBUG\tWorking Cell: {self.master.wl}")
                 
-                
-                # get across_num and down_num of new working letter
-                acr_num = self.master.cells[self.master.wl[0]][self.master.wl[1]].across_num
-                dwn_num = self.master.cells[self.master.wl[0]][self.master.wl[1]].down_num
-                
-                # figure out new working word
-                if f'{acr_num} {self.master.wdirec}' in self.master.words:
-                    self.master.wword = self.master.words[f'{acr_num} {self.master.wdirec}']
-                elif f'{dwn_num} {self.master.wdirec}' in self.master.words:
-                    self.master.wword = self.master.words[f'{dwn_num} {self.master.wdirec}']
-                elif f'{acr_num} across' in self.master.words:
-                    self.master.wword = self.master.words[f'{acr_num} across']
-                    self.master.wdirec = 'across'
-                elif f'{dwn_num} down' in self.master.words:
-                    self.master.wword = self.master.words[f'{dwn_num} down']
-                    self.master.wdirec = 'down'
-                
-                # set colors
-                for coord in self.master.wword.coords:
-                    self.master.cells[coord[0]][coord[1]].setColor(CYAN)
-                self.setColor(BLUE)
+                # highlight new working word and letter
+                highlight(self.master)
                 
 
     def setColor(self, color_hex):
