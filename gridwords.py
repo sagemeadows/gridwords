@@ -15,8 +15,9 @@ import string
 import tkinter as tk
 
 # Import functions from local modules
-from indices import Entry, updateClueIndices, spreadIndices
 from handleFiles import open_file, save_file
+from indices import Entry, updateClueIndices, spreadIndices
+from move import highlight
 
 # Print instructions
 instructions = """
@@ -187,7 +188,7 @@ class CellGrid(tk.Frame):
         
         # keep track of working letter coordinates
         self.wl = ()
-        #TODO: add way to keep track of working word?
+        # keep track of working direction and word
         self.wdirec = 'across'
         self.wword = None
         
@@ -342,26 +343,8 @@ def moveUp(event):
             # set new working letter
             cellgrid.wl = (row-1, column)
             
-            # get across_num and down_num of new working letter
-            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
-            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
-            
-            # figure out new working word
-            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
-            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
-            elif f'{acr_num} across' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} across']
-                cellgrid.wdirec = 'across'
-            elif f'{dwn_num} down' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
-                cellgrid.wdirec = 'down'
-            
-            # set colors
-            for coord in cellgrid.wword.coords:
-                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
-            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
+            # highlight new working word and letter
+            highlight(cellgrid)
 
 def moveDown(event):
     global mode
@@ -379,26 +362,8 @@ def moveDown(event):
             # set new working letter
             cellgrid.wl = (row+1, column)
             
-            # get across_num and down_num of new working letter
-            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
-            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
-            
-            # figure out new working word
-            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
-            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
-            elif f'{acr_num} across' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} across']
-                cellgrid.wdirec = 'across'
-            elif f'{dwn_num} down' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
-                cellgrid.wdirec = 'down'
-            
-            # set colors
-            for coord in cellgrid.wword.coords:
-                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
-            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
+            # highlight new working word and letter
+            highlight(cellgrid)
 
 def moveLeft(event):
     global mode
@@ -416,26 +381,8 @@ def moveLeft(event):
             # set new working letter
             cellgrid.wl = (row, column-1)
             
-            # get across_num and down_num of new working letter
-            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
-            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
-            
-            # figure out new working word
-            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
-            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
-            elif f'{acr_num} across' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} across']
-                cellgrid.wdirec = 'across'
-            elif f'{dwn_num} down' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
-                cellgrid.wdirec = 'down'
-            
-            # set colors
-            for coord in cellgrid.wword.coords:
-                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
-            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
+            # highlight new working word and letter
+            highlight(cellgrid)
 
 def moveRight(event):
     global mode
@@ -453,26 +400,8 @@ def moveRight(event):
             # set new working letter
             cellgrid.wl = (row, column+1)
             
-            # get across_num and down_num of new working letter
-            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
-            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
-            
-            # figure out new working word
-            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
-            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
-            elif f'{acr_num} across' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{acr_num} across']
-                cellgrid.wdirec = 'across'
-            elif f'{dwn_num} down' in cellgrid.words:
-                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
-                cellgrid.wdirec = 'down'
-            
-            # set colors
-            for coord in cellgrid.wword.coords:
-                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
-            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
+            # highlight new working word and letter
+            highlight(cellgrid)
 
 def quit(event):
     root_window.destroy()
