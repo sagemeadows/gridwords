@@ -104,17 +104,44 @@ class Cell(tk.Frame):
             
             # tell the grid to make the symmetric counterpart cell agree
             self.master.onCellClick(self.row, self.column)
+        
         elif mode == 'fill':
-            if color_hex == WHITE:
-                color_hex = CYAN
-                # reset old working letter color, if it exists
-                if self.master.wl[0] > -1:
-                    self.master.cells[self.master.wl[0]][self.master.wl[1]].setColor(WHITE)
+            if color_hex != BLACK:
+                # reset old working word, if it exists
+                if self.master.wword:
+                    for coord in self.master.wword.coords:
+                        self.master.cells[coord[0]][coord[1]].setColor(WHITE)
+                
+                ## reset old working letter color, if it exists
+                #if self.master.wl:
+                #    self.master.cells[self.master.wl[0]][self.master.wl[1]].setColor(WHITE)
 
                 # set new working letter
                 self.master.wl = (self.row, self.column)
                 #print(f"DEBUG\tWorking Cell: {self.master.wl}")
-                self.setColor(color_hex)
+                
+                
+                # get across_num and down_num of new working letter
+                acr_num = self.master.cells[self.master.wl[0]][self.master.wl[1]].across_num
+                dwn_num = self.master.cells[self.master.wl[0]][self.master.wl[1]].down_num
+                
+                # figure out new working word
+                if f'{acr_num} {self.master.wdirec}' in self.master.words:
+                    self.master.wword = self.master.words[f'{acr_num} {self.master.wdirec}']
+                elif f'{dwn_num} {self.master.wdirec}' in self.master.words:
+                    self.master.wword = self.master.words[f'{dwn_num} {self.master.wdirec}']
+                elif f'{acr_num} across' in self.master.words:
+                    self.master.wword = self.master.words[f'{acr_num} across']
+                    self.master.wdirec = 'across'
+                elif f'{dwn_num} down' in self.master.words:
+                    self.master.wword = self.master.words[f'{dwn_num} down']
+                    self.master.wdirec = 'down'
+                
+                # set colors
+                for coord in self.master.wword.coords:
+                    self.master.cells[coord[0]][coord[1]].setColor(CYAN)
+                self.setColor(BLUE)
+                
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
@@ -159,8 +186,10 @@ class CellGrid(tk.Frame):
         spreadIndices(self)
         
         # keep track of working letter coordinates
-        self.wl = (-1, -1)
+        self.wl = ()
         #TODO: add way to keep track of working word?
+        self.wdirec = 'across'
+        self.wword = None
         
         #print(f"DEBUG\tCells Grid: {self.cells}")
 
@@ -259,12 +288,6 @@ def createGrid(root_window, ent_rows, ent_columns):
     btn_chmd = tk.Button(frm_topbar, text="Change Mode", command=lambda : changeMode(lbl_mode))
     btn_chmd.grid(row=0, column=1)
 
-def createWIPwords(root_window):
-    global frames_dict
-    if frames_dict["frm_wip_wrds"]:
-        frames_dict["frm_wip_wrds"].destroy()
-    
-    frames_dict["frm_wip_wrds"] = WIPwords(root_window)
 
 def changeMode(lbl_mode):
     global mode
@@ -274,12 +297,19 @@ def changeMode(lbl_mode):
     elif mode == 'fill':
         mode = 'grid'
         lbl_mode["text"] = "You are in Grid-Editing Mode"
-        # reset non-black colors to white
-        # by calling for clue index update
         global frames_dict
         if "cell_grid" in frames_dict:
-            updateClueIndices(frames_dict["cell_grid"])
-            spreadIndices(frames_dict["cell_grid"])
+            cellgrid = frames_dict["cell_grid"]
+            # clear working letter, word, and direction
+            cellgrid.wl = ()
+            cellgrid.wword = None
+            cellgrid.wdirec = 'across'
+            # reset non-black colors to white
+            for row in range(len(cellgrid.cells)):
+                for column in range(len(cellgrid.cells[0])):
+                    cell = cellgrid.cells[row][column]
+                    if cell.getColor() != BLACK:
+                        cell.setColor(WHITE)
 
 def insertLetter(event):
     global mode
@@ -300,46 +330,149 @@ def moveUp(event):
     global mode
     global frames_dict
     if mode == 'fill':
-        row = frames_dict["cell_grid"].wl[0]
-        column = frames_dict["cell_grid"].wl[1]
-        if row != 0 and frames_dict["cell_grid"].cells[row-1][column].getColor() != BLACK:
-            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
-            frames_dict["cell_grid"].wl = (row-1, column)
-            frames_dict["cell_grid"].cells[row-1][column].setColor(CYAN)
-                
+        cellgrid = frames_dict["cell_grid"]
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if row != 0 and cellgrid.cells[row-1][column].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row-1, column)
+            
+            # get across_num and down_num of new working letter
+            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
+            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
+            
+            # figure out new working word
+            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
+            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
+            elif f'{acr_num} across' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} across']
+                cellgrid.wdirec = 'across'
+            elif f'{dwn_num} down' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
+                cellgrid.wdirec = 'down'
+            
+            # set colors
+            for coord in cellgrid.wword.coords:
+                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
+            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
 
 def moveDown(event):
     global mode
     global frames_dict
     if mode == 'fill':
-        row = frames_dict["cell_grid"].wl[0]
-        column = frames_dict["cell_grid"].wl[1]
-        if row != range(ROWS)[-1] and frames_dict["cell_grid"].cells[row+1][column].getColor() != BLACK:
-            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
-            frames_dict["cell_grid"].wl = (row+1, column)
-            frames_dict["cell_grid"].cells[row+1][column].setColor(CYAN)
+        cellgrid = frames_dict["cell_grid"]
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if row != range(ROWS)[-1] and cellgrid.cells[row+1][column].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row+1, column)
+            
+            # get across_num and down_num of new working letter
+            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
+            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
+            
+            # figure out new working word
+            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
+            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
+            elif f'{acr_num} across' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} across']
+                cellgrid.wdirec = 'across'
+            elif f'{dwn_num} down' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
+                cellgrid.wdirec = 'down'
+            
+            # set colors
+            for coord in cellgrid.wword.coords:
+                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
+            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
 
 def moveLeft(event):
     global mode
     global frames_dict
     if mode == 'fill':
-        row = frames_dict["cell_grid"].wl[0]
-        column = frames_dict["cell_grid"].wl[1]
-        if column != 0 and frames_dict["cell_grid"].cells[row][column-1].getColor() != BLACK:
-            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
-            frames_dict["cell_grid"].wl = (row, column-1)
-            frames_dict["cell_grid"].cells[row][column-1].setColor(CYAN)
+        cellgrid = frames_dict["cell_grid"]
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if column != 0 and cellgrid.cells[row][column-1].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row, column-1)
+            
+            # get across_num and down_num of new working letter
+            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
+            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
+            
+            # figure out new working word
+            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
+            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
+            elif f'{acr_num} across' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} across']
+                cellgrid.wdirec = 'across'
+            elif f'{dwn_num} down' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
+                cellgrid.wdirec = 'down'
+            
+            # set colors
+            for coord in cellgrid.wword.coords:
+                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
+            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
 
 def moveRight(event):
     global mode
     global frames_dict
     if mode == 'fill':
-        row = frames_dict["cell_grid"].wl[0]
-        column = frames_dict["cell_grid"].wl[1]
-        if column != range(COLUMNS)[-1] and frames_dict["cell_grid"].cells[row][column+1].getColor() != BLACK:
-            frames_dict["cell_grid"].cells[row][column].setColor(WHITE)
-            frames_dict["cell_grid"].wl = (row, column+1)
-            frames_dict["cell_grid"].cells[row][column+1].setColor(CYAN)
+        cellgrid = frames_dict["cell_grid"]
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if column != range(COLUMNS)[-1] and cellgrid.cells[row][column+1].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row, column+1)
+            
+            # get across_num and down_num of new working letter
+            acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
+            dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
+            
+            # figure out new working word
+            if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
+            elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
+            elif f'{acr_num} across' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{acr_num} across']
+                cellgrid.wdirec = 'across'
+            elif f'{dwn_num} down' in cellgrid.words:
+                cellgrid.wword = cellgrid.words[f'{dwn_num} down']
+                cellgrid.wdirec = 'down'
+            
+            # set colors
+            for coord in cellgrid.wword.coords:
+                cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
+            cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
 
 def quit(event):
     root_window.destroy()
