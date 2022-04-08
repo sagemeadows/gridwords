@@ -150,12 +150,9 @@ class Cell(tk.Frame):
 
     def getColor(self):
         return self.button.cget('background')
-        
-    #def setLetter(self, key):
-    #    self.letter.set(key)
 
 
-# create a CellGrid class that derives from tk.Frame
+# Create a CellGrid class that derives from tk.Frame
 # it will have a grid of Cells
 class CellGrid(tk.Frame):
     # define the ctor method 
@@ -225,9 +222,6 @@ class CellGrid(tk.Frame):
         #print(f"DEBUG\tWords: {self.words}")
 
 
-# Initial mode
-mode = 'grid'
-
 # Define functions
 def buildWindow(root_window):
     # Create gridwords logo in top left corner (TODO)
@@ -237,8 +231,6 @@ def buildWindow(root_window):
     # Create sidebar
     frm_sidebar = tk.Frame(root_window, relief=tk.FLAT, bd=20, bg=WHITE)
     frm_sidebar.grid(row=1, column=0)
-    #global frames_dict
-    #frames_dict["frm_sidebar"] = frm_sidebar
     
     # create things to go in sidebar
     lbl_rows = tk.Label(frm_sidebar, text="Number of rows:", bg=WHITE)
@@ -262,10 +254,8 @@ def buildWindow(root_window):
 
 def createGrid(root_window, ent_rows, ent_columns):
     # Clear old grid and related frames
-    global frames_dict
     for key,frame in frames_dict.items():
         frame.destroy()
-    #frames_dict = {}
     
     # Create grid
     global ROWS
@@ -298,7 +288,6 @@ def changeMode(lbl_mode):
     elif mode == 'fill':
         mode = 'grid'
         lbl_mode["text"] = "You are in Grid-Editing Mode"
-        global frames_dict
         if "cell_grid" in frames_dict:
             cellgrid = frames_dict["cell_grid"]
             # clear working letter, word, and direction
@@ -313,8 +302,6 @@ def changeMode(lbl_mode):
                         cell.setColor(WHITE)
 
 def insertLetter(event):
-    global mode
-    global frames_dict
     if mode == 'fill':
         key = event.char.upper()
         if key in string.ascii_uppercase: #ascii_letters:
@@ -322,14 +309,11 @@ def insertLetter(event):
             frames_dict["cell_grid"].setCellLetter(key)
 
 def deleteLetter(event):
-    global mode
-    global frames_dict
     if mode == 'fill':
        frames_dict["cell_grid"].setCellLetter('.') 
 
+
 def moveUp(event):
-    global mode
-    global frames_dict
     if mode == 'fill':
         cellgrid = frames_dict["cell_grid"]
         row = cellgrid.wl[0]
@@ -347,8 +331,6 @@ def moveUp(event):
             highlight(cellgrid)
 
 def moveDown(event):
-    global mode
-    global frames_dict
     if mode == 'fill':
         cellgrid = frames_dict["cell_grid"]
         row = cellgrid.wl[0]
@@ -366,8 +348,6 @@ def moveDown(event):
             highlight(cellgrid)
 
 def moveLeft(event):
-    global mode
-    global frames_dict
     if mode == 'fill':
         cellgrid = frames_dict["cell_grid"]
         row = cellgrid.wl[0]
@@ -385,8 +365,6 @@ def moveLeft(event):
             highlight(cellgrid)
 
 def moveRight(event):
-    global mode
-    global frames_dict
     if mode == 'fill':
         cellgrid = frames_dict["cell_grid"]
         row = cellgrid.wl[0]
@@ -419,6 +397,9 @@ if __name__ == "__main__":
     # that may later need to be updated
     # (via deletion and recreation)
     frames_dict = {}
+    
+    # initial mode
+    mode = 'grid'
 
     buildWindow(root_window)
     
