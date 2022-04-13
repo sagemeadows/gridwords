@@ -147,7 +147,7 @@ def updateClueIndices(cellgrid):
                     # REGULAR VERTICAL CHECK: if the square above is black
                     #                         and the one below is white
                     if cellgrid.cells[row-1][column].getColor() == BLACK \
-                    and cellgrid.cells[row+1][column] == WHITE:
+                    and cellgrid.cells[row+1][column].getColor() == WHITE:
                         give_num = True
                         word_down = True
 
@@ -167,9 +167,6 @@ def updateClueIndices(cellgrid):
                     # create across entry and add to words dict
                     entry = Entry(counter, 'across')
                     cellgrid.words[f'{counter} across'] = entry
-
-                else:
-                    cell.across_word_start = False
       
                 # if cell is the start of a vertical word
                 if word_down:
