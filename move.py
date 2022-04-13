@@ -18,6 +18,70 @@ RED = '#ff0000'
 ORANGE = '#ffa500'
 YELLOW = '#ffff00'
 
+def moveUp(event, mode='', cellgrid=None):
+    if mode == 'fill':
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if row != 0 and cellgrid.cells[row-1][column].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row-1, column)
+            
+            # highlight new working word and letter
+            highlight(cellgrid)
+
+def moveDown(event, mode='', cellgrid=None):
+    if mode == 'fill':
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if row != range(len(cellgrid.cells))[-1] and cellgrid.cells[row+1][column].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row+1, column)
+            
+            # highlight new working word and letter
+            highlight(cellgrid)
+
+def moveLeft(event, mode='', cellgrid=None):
+    if mode == 'fill':
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if column != 0 and cellgrid.cells[row][column-1].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row, column-1)
+            
+            # highlight new working word and letter
+            highlight(cellgrid)
+
+def moveRight(event, mode='', cellgrid=None):
+    if mode == 'fill':
+        row = cellgrid.wl[0]
+        column = cellgrid.wl[1]
+        if column != range(len(cellgrid.cells[0]))[-1] and cellgrid.cells[row][column+1].getColor() != BLACK:
+            # reset old working word, if it exists
+            if cellgrid.wword:
+                for coord in cellgrid.wword.coords:
+                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+            
+            # set new working letter
+            cellgrid.wl = (row, column+1)
+            
+            # highlight new working word and letter
+            highlight(cellgrid)
+
 def highlight(cellgrid):
     # get across_num and down_num of new working letter
     acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num

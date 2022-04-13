@@ -17,7 +17,7 @@ import tkinter as tk
 # Import functions from local modules
 from handleFiles import open_file, save_file
 from indices import Entry, updateClueIndices, spreadIndices
-from move import highlight
+from move import moveUp, moveDown, moveLeft, moveRight, highlight
 
 # Print instructions
 instructions = """
@@ -257,6 +257,10 @@ def createGrid(root_window, ent_rows, ent_columns):
     cell_grid = CellGrid(root_window)
     cell_grid.grid(row=1, column=1)
     frames_dict["cell_grid"] = cell_grid
+    root_window.bind("<Up>", lambda e: moveUp(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
+    root_window.bind("<Down>", lambda e: moveDown(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
+    root_window.bind("<Left>", lambda e: moveLeft(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
+    root_window.bind("<Right>", lambda e: moveRight(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
     
     # Create top bar with mode button
     frm_topbar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
@@ -305,74 +309,6 @@ def deleteLetter(event):
        frames_dict["cell_grid"].setCellLetter('.') 
 
 
-def moveUp(event):
-    if mode == 'fill':
-        cellgrid = frames_dict["cell_grid"]
-        row = cellgrid.wl[0]
-        column = cellgrid.wl[1]
-        if row != 0 and cellgrid.cells[row-1][column].getColor() != BLACK:
-            # reset old working word, if it exists
-            if cellgrid.wword:
-                for coord in cellgrid.wword.coords:
-                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
-            
-            # set new working letter
-            cellgrid.wl = (row-1, column)
-            
-            # highlight new working word and letter
-            highlight(cellgrid)
-
-def moveDown(event):
-    if mode == 'fill':
-        cellgrid = frames_dict["cell_grid"]
-        row = cellgrid.wl[0]
-        column = cellgrid.wl[1]
-        if row != range(ROWS)[-1] and cellgrid.cells[row+1][column].getColor() != BLACK:
-            # reset old working word, if it exists
-            if cellgrid.wword:
-                for coord in cellgrid.wword.coords:
-                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
-            
-            # set new working letter
-            cellgrid.wl = (row+1, column)
-            
-            # highlight new working word and letter
-            highlight(cellgrid)
-
-def moveLeft(event):
-    if mode == 'fill':
-        cellgrid = frames_dict["cell_grid"]
-        row = cellgrid.wl[0]
-        column = cellgrid.wl[1]
-        if column != 0 and cellgrid.cells[row][column-1].getColor() != BLACK:
-            # reset old working word, if it exists
-            if cellgrid.wword:
-                for coord in cellgrid.wword.coords:
-                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
-            
-            # set new working letter
-            cellgrid.wl = (row, column-1)
-            
-            # highlight new working word and letter
-            highlight(cellgrid)
-
-def moveRight(event):
-    if mode == 'fill':
-        cellgrid = frames_dict["cell_grid"]
-        row = cellgrid.wl[0]
-        column = cellgrid.wl[1]
-        if column != range(COLUMNS)[-1] and cellgrid.cells[row][column+1].getColor() != BLACK:
-            # reset old working word, if it exists
-            if cellgrid.wword:
-                for coord in cellgrid.wword.coords:
-                    cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
-            
-            # set new working letter
-            cellgrid.wl = (row, column+1)
-            
-            # highlight new working word and letter
-            highlight(cellgrid)
-
 def quit(event):
     root_window.destroy()
 
@@ -398,10 +334,6 @@ if __name__ == "__main__":
     # bind keypresses
     root_window.bind("<Key>", insertLetter)
     root_window.bind("<BackSpace>", deleteLetter)
-    root_window.bind("<Up>", moveUp)
-    root_window.bind("<Down>", moveDown)
-    root_window.bind("<Left>", moveLeft)
-    root_window.bind("<Right>", moveRight)
     root_window.bind("<Escape>", lambda e: quit(e))
     
     # start handling UI events
