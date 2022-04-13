@@ -66,6 +66,8 @@ class Cell(tk.Frame):
 
         # create a data member called 'button' with 'self' as parent
         self.button = tk.Button(self, textvariable=self.letter, command=self.onClick)
+        self.button.bind("<Button-4>", self.onScroll)
+        self.button.bind("<Button-5>", self.onScroll)
 
         # color button always white
         self.button.configure(background=WHITE, activebackground=WHITE, relief=tk.FLAT, bd=0)
@@ -85,6 +87,7 @@ class Cell(tk.Frame):
         
         self.down_num = 0
         self.down_pos = -1
+        
 
     def setText(self, text):
         # update self.text variable which will automatically update the self.button's text
@@ -112,10 +115,6 @@ class Cell(tk.Frame):
                 if self.master.wword:
                     for coord in self.master.wword.coords:
                         self.master.cells[coord[0]][coord[1]].setColor(WHITE)
-                
-                ## reset old working letter color, if it exists
-                #if self.master.wl:
-                #    self.master.cells[self.master.wl[0]][self.master.wl[1]].setColor(WHITE)
 
                 # set new working letter
                 self.master.wl = (self.row, self.column)
@@ -123,7 +122,19 @@ class Cell(tk.Frame):
                 
                 # highlight new working word and letter
                 highlight(self.master)
+    
+    def onScroll(self, event):
+        if mode == 'fill':
+            color_hex = self.button['background']
+            if color_hex != BLACK:
+                # change working direc
+                if self.master.wdirec == 'across':
+                    self.master.wdirec = 'down'
+                elif self.master.wdirec == 'down':
+                    self.master.wdirec = 'across'
                 
+                # click cell
+                self.onClick()
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
