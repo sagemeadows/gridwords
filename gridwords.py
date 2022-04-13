@@ -151,6 +151,8 @@ class CellGrid(tk.Frame):
     def __init__(self, master=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
+        global frames_dict
+        frames_dict["cell_grid"] = self
         
         # create cells array
         self.cells = []
@@ -174,6 +176,7 @@ class CellGrid(tk.Frame):
         
         updateClueIndices(self)
         spreadIndices(self)
+        createWIPwords(self.master)
         
         # keep track of working letter coordinates
         self.wl = ()
@@ -193,7 +196,7 @@ class CellGrid(tk.Frame):
         self.cells[opp_row][opp_column].setColor(color_hex)
         updateClueIndices(self)
         spreadIndices(self)
-        
+        createWIPwords(self.master)
 
     def setCellLetter(self, key):
         working_cell = self.cells[self.wl[0]][self.wl[1]]
@@ -274,6 +277,46 @@ def createGrid(root_window, ent_rows, ent_columns):
     mode = 'grid'
     btn_chmd = tk.Button(frm_topbar, text="Change Mode", command=lambda : changeMode(lbl_mode))
     btn_chmd.grid(row=0, column=1)
+    
+    # Create frame for WIP words
+    createWIPwords(root_window) 
+
+def createWIPwords(root_window):
+    global frames_dict
+    for key,frame in frames_dict.items():
+        if key == "wip_words":
+            frame.destroy()
+    
+    wip_words = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
+    wip_words.grid(row=2, column=1)
+    frames_dict["wip_words"] = wip_words
+    # create across and down word frames
+    wip_across = tk.Frame(wip_words, relief=tk.FLAT, bd=2, bg=WHITE)
+    wip_across.grid(row=0, column=0)
+    wip_down = tk.Frame(wip_words, relief=tk.FLAT, bd=2, bg=WHITE)
+    wip_down.grid(row=0, column=1)
+    # create labels
+    lbl_across = tk.Label(wip_across, text="ACROSS", bg=WHITE, bd=2)
+    lbl_across.pack(side="top")
+    lbl_down = tk.Label(wip_down, text="DOWN", bg=WHITE, bd=2)
+    lbl_down.pack(side="top")
+    # fill in wip words
+    wip_words_dict = frames_dict["cell_grid"].words
+    for key,entry in wip_words_dict.items():
+        word = tk.StringVar()
+        word.set(entry.word)
+        #word.set(f'{entry.index}. {entry.word}')
+        
+        if entry.direc == 'across':
+            frm = tk.Frame(wip_across, relief=tk.FLAT, bd=2, bg=WHITE)
+        elif entry.direc == 'down':
+            frm = tk.Frame(wip_down, relief=tk.FLAT, bd=2, bg=WHITE)
+        
+        lbl = tk.Label(frm, text=f'{entry.index}. ', bd=2, bg=WHITE)
+        lbl.grid(row=0, column=0)
+        btn = tk.Button(frm, bd=2, textvariable=word)#, command=)
+        btn.grid(row=0, column=1)
+        frm.pack(side="top")
 
 
 def changeMode(lbl_mode):
@@ -303,11 +346,12 @@ def insertLetter(event):
         if key in string.ascii_uppercase: #ascii_letters:
             #print(f"DEBUG\tLetter = {event.char}")
             frames_dict["cell_grid"].setCellLetter(key)
+            createWIPwords(root_window)
 
 def deleteLetter(event):
     if mode == 'fill':
        frames_dict["cell_grid"].setCellLetter('.') 
-
+       createWIPwords(root_window)
 
 def quit(event):
     root_window.destroy()

@@ -27,6 +27,7 @@ class Entry:
         self.poss_words = []
 
     def updateWord(self):
+        self.word = ''
         self.word = self.word.join(self.letters)
 
 
