@@ -24,16 +24,18 @@ def highlight(cellgrid):
     dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
     
     # figure out new working word
-    if f'{acr_num} {cellgrid.wdirec}' in cellgrid.words:
-        cellgrid.wword = cellgrid.words[f'{acr_num} {cellgrid.wdirec}']
-    elif f'{dwn_num} {cellgrid.wdirec}' in cellgrid.words:
-        cellgrid.wword = cellgrid.words[f'{dwn_num} {cellgrid.wdirec}']
-    elif f'{acr_num} across' in cellgrid.words:
-        cellgrid.wword = cellgrid.words[f'{acr_num} across']
-        cellgrid.wdirec = 'across'
-    elif f'{dwn_num} down' in cellgrid.words:
-        cellgrid.wword = cellgrid.words[f'{dwn_num} down']
-        cellgrid.wdirec = 'down'
+    if cellgrid.wdirec == 'across':
+        if acr_num > 0:
+            cellgrid.wword = cellgrid.words[f'{acr_num} across']
+        else:
+            cellgrid.wdirec = 'down'
+            cellgrid.wword = cellgrid.words[f'{dwn_num} down']
+    elif cellgrid.wdirec == 'down':
+        if dwn_num > 0:
+            cellgrid.wword = cellgrid.words[f'{dwn_num} down']
+        else:
+            cellgrid.wdirec = 'across'
+            cellgrid.wword = cellgrid.words[f'{acr_num} across']
     
     # set colors
     for coord in cellgrid.wword.coords:
