@@ -81,6 +81,7 @@ class Cell(tk.Frame):
         self.clue_label = tk.Label(self, textvariable=self.clue_index)
         self.clue_label.configure(background=WHITE, activebackground=WHITE)
         self.clue_label.place(x=INDEX_MARGIN, y=INDEX_MARGIN)
+        self.clue_label.bind('<Button-1>', self.onClick)
         
         self.across_num = 0
         self.across_pos = -1
@@ -96,7 +97,7 @@ class Cell(tk.Frame):
     def setClueIndex(self, index):
         self.clue_index.set(str(index))
 
-    def onClick(self):
+    def onClick(self, args=None):
         color_hex = self.button['background']
         if mode == 'grid':
             #color_hex = self.button['background']
