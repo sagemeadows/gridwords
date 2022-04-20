@@ -30,8 +30,10 @@ def moveUp(event, mode='', cellgrid=None):
             
             # set new working letter
             cellgrid.wl = (row-1, column)
+            cell = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]]
             
-            # highlight new working word and letter
+            # select and highlight new working word and letter
+            select(cell, cellgrid)
             highlight(cellgrid)
 
 def moveDown(event, mode='', cellgrid=None):
@@ -46,8 +48,10 @@ def moveDown(event, mode='', cellgrid=None):
             
             # set new working letter
             cellgrid.wl = (row+1, column)
+            cell = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]]
             
-            # highlight new working word and letter
+            # select and highlight new working word and letter
+            select(cell, cellgrid)
             highlight(cellgrid)
 
 def moveLeft(event, mode='', cellgrid=None):
@@ -62,8 +66,10 @@ def moveLeft(event, mode='', cellgrid=None):
             
             # set new working letter
             cellgrid.wl = (row, column-1)
+            cell = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]]
             
-            # highlight new working word and letter
+            # select and highlight new working word and letter
+            select(cell, cellgrid)
             highlight(cellgrid)
 
 def moveRight(event, mode='', cellgrid=None):
@@ -78,11 +84,22 @@ def moveRight(event, mode='', cellgrid=None):
             
             # set new working letter
             cellgrid.wl = (row, column+1)
+            cell = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]]
             
-            # highlight new working word and letter
+            # select and highlight new working word and letter
+            select(cell, cellgrid)
             highlight(cellgrid)
 
-def highlight(cellgrid):
+def select(cell, cellgrid):
+    # reset old working word, if it exists
+    if cellgrid.wword:
+        for coord in cellgrid.wword.coords:
+            cellgrid.cells[coord[0]][coord[1]].setColor(WHITE)
+
+    # set new working letter
+    cellgrid.wl = (cell.row, cell.column)
+    #print(f"DEBUG\tWorking Cell: {cellgrid.wl}")
+    
     # get across_num and down_num of new working letter
     acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
     dwn_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].down_num
@@ -100,7 +117,8 @@ def highlight(cellgrid):
         else:
             cellgrid.wdirec = 'across'
             cellgrid.wword = cellgrid.words[f'{acr_num} across']
-    
+
+def highlight(cellgrid):
     # set colors
     for coord in cellgrid.wword.coords:
         cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)

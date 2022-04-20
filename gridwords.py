@@ -17,7 +17,8 @@ import tkinter as tk
 # Import functions from local modules
 from handleFiles import open_file, save_file
 from indices import Entry, updateClueIndices, spreadIndices
-from move import moveUp, moveDown, moveLeft, moveRight, highlight
+from move import moveUp, moveDown, moveLeft, moveRight, select, highlight
+from datasearch import getPossWords
 
 # Print instructions
 instructions = """
@@ -68,6 +69,7 @@ class Cell(tk.Frame):
         self.button = tk.Button(self, textvariable=self.letter, command=self.onClick)
         self.button.bind("<Button-4>", self.onScroll)
         self.button.bind("<Button-5>", self.onScroll)
+        self.button.bind("<Button-3>", self.onRightClick)
 
         # color button always white
         self.button.configure(background=WHITE, activebackground=WHITE, relief=tk.FLAT, bd=0)
@@ -82,6 +84,7 @@ class Cell(tk.Frame):
         self.clue_label.configure(background=WHITE, activebackground=WHITE)
         self.clue_label.place(x=INDEX_MARGIN, y=INDEX_MARGIN)
         self.clue_label.bind('<Button-1>', self.onClick)
+        self.clue_label.bind('<Button-3>', self.onRightClick)
         
         self.across_num = 0
         self.across_pos = -1
@@ -112,16 +115,17 @@ class Cell(tk.Frame):
         
         elif mode == 'fill':
             if color_hex != BLACK:
-                # reset old working word, if it exists
-                if self.master.wword:
-                    for coord in self.master.wword.coords:
-                        self.master.cells[coord[0]][coord[1]].setColor(WHITE)
+                ## reset old working word, if it exists
+                #if self.master.wword:
+                #    for coord in self.master.wword.coords:
+                #        self.master.cells[coord[0]][coord[1]].setColor(WHITE)
 
-                # set new working letter
-                self.master.wl = (self.row, self.column)
-                #print(f"DEBUG\tWorking Cell: {self.master.wl}")
+                ## set new working letter
+                #self.master.wl = (self.row, self.column)
+                ##print(f"DEBUG\tWorking Cell: {self.master.wl}")
                 
-                # highlight new working word and letter
+                # select and highlight new working word and letter
+                select(self, self.master)
                 highlight(self.master)
     
     def onScroll(self, event):
@@ -136,6 +140,16 @@ class Cell(tk.Frame):
                 
                 # click cell
                 self.onClick()
+    
+    def onRightClick(self, event):
+        if mode == 'fill':
+            color_hex = self.button['background']
+            if color_hex != BLACK:
+                select(self, self.master)
+                #print(f"DEBUG\tWorking cell: ({self.master.wl[0]}, {self.master.wl[1]})")
+                getPossWords(self.master)
+                
+                #entry = self.master.
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
