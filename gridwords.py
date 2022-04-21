@@ -29,7 +29,8 @@ print(instructions)
 # Define colors with hex codes
 WHITE = '#ffffff'
 BLACK = '#000000'
-GRAY = '#d9d9d9'
+GRAY1 = '#f0f0f0'
+GRAY2 = '#d9d9d9'
 BLUE = '#0000ff'
 CYAN = '#00ffff'
 GREEN = '#00ff00'
@@ -102,7 +103,7 @@ class Cell(tk.Frame):
 
     def onClick(self, args=None):
         color_hex = self.button['background']
-        if mode == 'grid':
+        if self.master.mode == 'grid':
             #color_hex = self.button['background']
             if color_hex == WHITE:
                 color_hex = BLACK
@@ -113,7 +114,7 @@ class Cell(tk.Frame):
             # tell the grid to make the symmetric counterpart cell agree
             self.master.onCellClick(self.row, self.column)
         
-        elif mode == 'fill':
+        elif self.master.mode == 'fill':
             if color_hex != BLACK:
                 ## reset old working word, if it exists
                 #if self.master.wword:
@@ -129,7 +130,7 @@ class Cell(tk.Frame):
                 highlight(self.master)
     
     def onScroll(self, event):
-        if mode == 'fill':
+        if self.master.mode == 'fill':
             color_hex = self.button['background']
             if color_hex != BLACK:
                 # change working direc
@@ -142,7 +143,7 @@ class Cell(tk.Frame):
                 self.onClick()
     
     def onRightClick(self, event):
-        if mode == 'fill':
+        if self.master.mode == 'fill':
             color_hex = self.button['background']
             if color_hex != BLACK:
                 select(self, self.master)
@@ -169,9 +170,13 @@ class CellGrid(tk.Frame):
         global frames_dict
         frames_dict["cell_grid"] = self
         
+        # set mode
+        self.mode = 'grid'
+        
         # create cells array
         self.cells = []
         
+        # create entries dict
         self.words = {}
         
         for row in range(ROWS):
@@ -232,6 +237,44 @@ class CellGrid(tk.Frame):
         #print(f"DEBUG\tWords: {self.words}")
 
 
+class Topbar(tk.Frame):
+    # define the ctor method 
+    def __init__(self, master=None):
+        # initialize the base class
+        tk.Frame.__init__(self, master, bg=WHITE, bd=2)
+        global frames_dict
+        frames_dict["topbar"] = self
+        
+        # create mode buttons
+        self.grid_btn = tk.Button(self, text="Edit Grid", bg=GRAY1, command=lambda : self.gridMode(frames_dict["cell_grid"]))
+        self.fill_btn = tk.Button(self, text="Fill Words", bg=GRAY2, command=lambda : self.fillMode(frames_dict["cell_grid"]))
+        #self.clue_btn = tk.Button(self, text="Find Clues", bg=GRAY2, command=lambda : self.clueMode(frames_dict["cell_grid"]))
+        self.grid_btn.grid(row=0, column=0)
+        self.fill_btn.grid(row=0, column=1)
+        #self.clue_btn.grid(row=0, column=2)
+    
+    def gridMode(self, cellgrid):
+        cellgrid.mode = 'grid'
+        self.grid_btn['background'] = GRAY1
+        self.fill_btn['background'] = GRAY2
+        #self.clue_btn['background'] = GRAY2
+        cellgrid.wl = ()
+        cellgrid.wword = None
+        cellgrid.wdirec = 'across'
+        # reset non-black colors to white
+        for row in range(len(cellgrid.cells)):
+            for column in range(len(cellgrid.cells[0])):
+                cell = cellgrid.cells[row][column]
+                if cell.getColor() != BLACK:
+                    cell.setColor(WHITE)
+    
+    def fillMode(self, cellgrid):
+        cellgrid.mode = 'fill'
+        self.grid_btn['background'] = GRAY2
+        self.fill_btn['background'] = GRAY1
+        #self.clue_btn['background'] = GRAY2
+
+
 # Define functions
 def buildWindow(root_window):
     # Create gridwords logo in top left corner (TODO)
@@ -239,27 +282,27 @@ def buildWindow(root_window):
     logo.grid(row=0, column=0, sticky="nw")
     
     # Create sidebar
-    frm_sidebar = tk.Frame(root_window, relief=tk.FLAT, bd=20, bg=WHITE)
-    frm_sidebar.grid(row=1, column=0)
+    sidebar = tk.Frame(root_window, relief=tk.FLAT, bd=20, bg=WHITE)
+    sidebar.grid(row=1, column=0)
     
     # create things to go in sidebar
-    lbl_rows = tk.Label(frm_sidebar, text="Number of rows:", bg=WHITE)
+    lbl_rows = tk.Label(sidebar, text="Number of rows:", bg=WHITE)
     lbl_rows.grid(row=0, column=0)
-    ent_rows = tk.Entry(frm_sidebar, width=3, highlightcolor=YELLOW)
+    ent_rows = tk.Entry(sidebar, width=3, highlightcolor=YELLOW)
     ent_rows.grid(row=0, column=1)
     
-    lbl_columns = tk.Label(frm_sidebar, text="Number of columns:", bg=WHITE)
+    lbl_columns = tk.Label(sidebar, text="Number of columns:", bg=WHITE)
     lbl_columns.grid(row=1, column=0)
-    ent_columns = tk.Entry(frm_sidebar, width=3, highlightcolor=YELLOW)
+    ent_columns = tk.Entry(sidebar, width=3, highlightcolor=YELLOW)
     ent_columns.grid(row=1, column=1)
     
-    btn_mk_grid = tk.Button(frm_sidebar, text="Create Grid", command=lambda : createGrid(root_window, ent_rows, ent_columns))
+    btn_mk_grid = tk.Button(sidebar, text="Create Grid", command=lambda : createGrid(root_window, ent_rows, ent_columns))
     btn_mk_grid.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
     
-    btn_open = tk.Button(frm_sidebar, text="Open", command=open_file)
+    btn_open = tk.Button(sidebar, text="Open", command=open_file)
     btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
 
-    btn_save = tk.Button(frm_sidebar, text="Save As...", command=save_file)
+    btn_save = tk.Button(sidebar, text="Save As...", command=save_file)
     btn_save.grid(row=4, column=0, columnspan=2, padx=5)
 
 def createGrid(root_window, ent_rows, ent_columns):
@@ -275,23 +318,16 @@ def createGrid(root_window, ent_rows, ent_columns):
     cell_grid = CellGrid(root_window)
     cell_grid.grid(row=1, column=1)
     frames_dict["cell_grid"] = cell_grid
-    root_window.bind("<Up>", lambda e: moveUp(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
-    root_window.bind("<Down>", lambda e: moveDown(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
-    root_window.bind("<Left>", lambda e: moveLeft(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
-    root_window.bind("<Right>", lambda e: moveRight(e, mode=mode, cellgrid=frames_dict["cell_grid"]))
+    root_window.bind("<Up>", lambda e: moveUp(e, cellgrid=frames_dict["cell_grid"]))
+    root_window.bind("<Down>", lambda e: moveDown(e, cellgrid=frames_dict["cell_grid"]))
+    root_window.bind("<Left>", lambda e: moveLeft(e, cellgrid=frames_dict["cell_grid"]))
+    root_window.bind("<Right>", lambda e: moveRight(e, cellgrid=frames_dict["cell_grid"]))
     
     # Create top bar with mode button
-    frm_topbar = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
-    frm_topbar.grid(row=0, column=1)
-    frames_dict["frm_topbar"] = frm_topbar
-    # create mode label
-    lbl_mode = tk.Label(frm_topbar, text="You are in Grid-Editing Mode", bd=2, bg=WHITE)
-    lbl_mode.grid(row=0, column=0)
-    # create mode button
-    global mode
-    mode = 'grid'
-    btn_chmd = tk.Button(frm_topbar, text="Change Mode", command=lambda : changeMode(lbl_mode))
-    btn_chmd.grid(row=0, column=1)
+    topbar = Topbar(root_window)
+    topbar.grid(row=0, column=1)
+    frames_dict["topbar"] = topbar
+    topbar_dict = {}
     
     # Create frame for WIP words
     createWIPwords(root_window) 
@@ -332,41 +368,22 @@ def createWIPwords(root_window):
         btn = tk.Button(frm, bd=2, textvariable=word)#, command=)
         btn.grid(row=0, column=1)
         frm.pack(side="top")
-
-
-def changeMode(lbl_mode):
-    global mode
-    if mode == 'grid':
-        mode = 'fill'
-        lbl_mode["text"] = "You are in Word-Filling Mode"
-    elif mode == 'fill':
-        mode = 'grid'
-        lbl_mode["text"] = "You are in Grid-Editing Mode"
-        if "cell_grid" in frames_dict:
-            cellgrid = frames_dict["cell_grid"]
-            # clear working letter, word, and direction
-            cellgrid.wl = ()
-            cellgrid.wword = None
-            cellgrid.wdirec = 'across'
-            # reset non-black colors to white
-            for row in range(len(cellgrid.cells)):
-                for column in range(len(cellgrid.cells[0])):
-                    cell = cellgrid.cells[row][column]
-                    if cell.getColor() != BLACK:
-                        cell.setColor(WHITE)
+        
 
 def insertLetter(event):
-    if mode == 'fill':
-        key = event.char.upper()
-        if key in string.ascii_uppercase: #ascii_letters:
-            #print(f"DEBUG\tLetter = {event.char}")
-            frames_dict["cell_grid"].setCellLetter(key)
-            createWIPwords(root_window)
+    if "cell_grid" in frames_dict:
+        if frames_dict["cell_grid"].mode == 'fill':
+            key = event.char.upper()
+            if key in string.ascii_uppercase: #ascii_letters:
+                #print(f"DEBUG\tLetter = {event.char}")
+                frames_dict["cell_grid"].setCellLetter(key)
+                createWIPwords(root_window)
 
 def deleteLetter(event):
-    if mode == 'fill':
-       frames_dict["cell_grid"].setCellLetter('.') 
-       createWIPwords(root_window)
+    if "cell_grid" in frames_dict:
+        if frames_dict["cell_grid"].mode == 'fill':
+            frames_dict["cell_grid"].setCellLetter('.')
+            createWIPwords(root_window)
 
 def quit(event):
     root_window.destroy()
@@ -384,9 +401,6 @@ if __name__ == "__main__":
     # that may later need to be updated
     # (via deletion and recreation)
     frames_dict = {}
-    
-    # initial mode
-    mode = 'grid'
 
     buildWindow(root_window)
     

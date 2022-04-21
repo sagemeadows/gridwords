@@ -18,8 +18,8 @@ RED = '#ff0000'
 ORANGE = '#ffa500'
 YELLOW = '#ffff00'
 
-def moveUp(event, mode='', cellgrid=None):
-    if mode == 'fill':
+def moveUp(event, cellgrid=None):
+    if cellgrid.mode == 'fill':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if row != 0 and cellgrid.cells[row-1][column].getColor() != BLACK:
@@ -36,8 +36,8 @@ def moveUp(event, mode='', cellgrid=None):
             select(cell, cellgrid)
             highlight(cellgrid)
 
-def moveDown(event, mode='', cellgrid=None):
-    if mode == 'fill':
+def moveDown(event, cellgrid=None):
+    if cellgrid.mode == 'fill':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if row != range(len(cellgrid.cells))[-1] and cellgrid.cells[row+1][column].getColor() != BLACK:
@@ -54,8 +54,8 @@ def moveDown(event, mode='', cellgrid=None):
             select(cell, cellgrid)
             highlight(cellgrid)
 
-def moveLeft(event, mode='', cellgrid=None):
-    if mode == 'fill':
+def moveLeft(event, cellgrid=None):
+    if cellgrid.mode == 'fill':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if column != 0 and cellgrid.cells[row][column-1].getColor() != BLACK:
@@ -72,8 +72,8 @@ def moveLeft(event, mode='', cellgrid=None):
             select(cell, cellgrid)
             highlight(cellgrid)
 
-def moveRight(event, mode='', cellgrid=None):
-    if mode == 'fill':
+def moveRight(event, cellgrid=None):
+    if cellgrid.mode == 'fill':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if column != range(len(cellgrid.cells[0]))[-1] and cellgrid.cells[row][column+1].getColor() != BLACK:
