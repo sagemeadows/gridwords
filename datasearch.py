@@ -29,7 +29,7 @@ def getPossWords(cellgrid):
     # reset poss words
     cellgrid.wword.poss_words.clear()
     
-    # search database
+    # get search pattern
     match_word = cellgrid.wword.word.replace('.', '[A-Z]')
     match_pattern = re.compile(match_word)
     
@@ -67,4 +67,60 @@ def getPossWords(cellgrid):
     print(f"DEBUG\tPossible words for '{cellgrid.wword.word}':\n\t{cellgrid.wword.poss_words}\n")
     if len(cellgrid.wword.poss_words) > 50:
         print(f"\tTotal possible words: {len(cellgrid.wword.poss_words)}\n")
+
+def allPossWords(cellgrid):
+    cellgrid.wword = None
+    match_patterns = {}
+    
+    # reset poss words
+    # and get search patterns
+    for key,entry in cellgrid.words.items():
+        entry.poss_words.clear()
+        match_word = entry.word.replace('.', '[A-Z]')
+        match_pattern = re.compile(match_word)
+        match_patterns[f'{entry.index} {entry.direc}'] = match_pattern
+    
+    # open words file
+    file_handle = open(words_filename, 'r')
+    while True:
+        line = file_handle.readline().upper().replace("'", "")
+        if not line:
+            # at end of file
+            break
+        
+        for entry,match_pattern in match_patterns.items():
+            mp = match_pattern.findall(line)
+            if mp:
+                if mp[0] not in cellgrid.words[entry].poss_words:
+                    cellgrid.words[entry].poss_words.append(mp[0])
+    
+    file_handle.close()
+    
+    # color cells according to number of poss words
+    for row in range(len(cellgrid.cells)):
+        for column in range(len(cellgrid.cells[0])):
+            if cellgrid.cells[row][column].getColor() != BLACK:
+                acr_num = cellgrid.cells[row][column].across_num
+                acr_poss_words = 0
+                if acr_num > 0:
+                    acr_poss_words = len(cellgrid.words[f'{acr_num} across'].poss_words)
+                else:
+                    acr_poss_words = -1
+                
+                dwn_num = cellgrid.cells[row][column].down_num
+                dwn_poss_words = 0
+                if dwn_num > 0:
+                    dwn_poss_words = len(cellgrid.words[f'{dwn_num} down'].poss_words)
+                else:
+                    dwn_poss_words = -1
+                
+                color_hex = GREEN
+                if acr_poss_words == 0 or dwn_poss_words == 0:
+                    color_hex = RED
+                elif 1 < acr_poss_words <= 10 or 1 < dwn_poss_words <= 10:
+                    color_hex = ORANGE
+                elif 1 < acr_poss_words <= 50 or 1 < dwn_poss_words <= 50:
+                    color_hex = YELLOW
+                
+                cellgrid.cells[row][column].setColor(color_hex)
 

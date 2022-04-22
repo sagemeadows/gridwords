@@ -18,7 +18,7 @@ import tkinter as tk
 from handleFiles import open_file, save_file
 from indices import Entry, updateClueIndices, spreadIndices
 from move import moveUp, moveDown, moveLeft, moveRight, select, highlight
-from datasearch import getPossWords
+from datasearch import getPossWords, allPossWords
 
 # Print instructions
 instructions = """
@@ -250,14 +250,17 @@ class Topbar(tk.Frame):
         self.fill_btn = tk.Button(self, text="Fill Words", bg=GRAY2, command=lambda : self.fillMode(frames_dict["cell_grid"]))
         #self.clue_btn = tk.Button(self, text="Find Clues", bg=GRAY2, command=lambda : self.clueMode(frames_dict["cell_grid"]))
         self.grid_btn.grid(row=0, column=0)
-        self.fill_btn.grid(row=0, column=1)
+        self.fill_btn.grid(row=0, column=1, padx=10)
         #self.clue_btn.grid(row=0, column=2)
+        
+        self.search_btn = tk.Button(self, text="Poss Words", bg=GRAY2, command=lambda : allPossWords(frames_dict["cell_grid"]))
     
     def gridMode(self, cellgrid):
         cellgrid.mode = 'grid'
         self.grid_btn['background'] = GRAY1
         self.fill_btn['background'] = GRAY2
         #self.clue_btn['background'] = GRAY2
+        self.search_btn.grid_forget()
         cellgrid.wl = ()
         cellgrid.wword = None
         cellgrid.wdirec = 'across'
@@ -273,6 +276,7 @@ class Topbar(tk.Frame):
         self.grid_btn['background'] = GRAY2
         self.fill_btn['background'] = GRAY1
         #self.clue_btn['background'] = GRAY2
+        self.search_btn.grid(row=1, column=1, pady=10)
 
 
 # Define functions
