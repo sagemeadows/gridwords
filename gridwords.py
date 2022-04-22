@@ -303,11 +303,13 @@ def buildWindow(root_window):
     btn_mk_grid = tk.Button(sidebar, text="Create Grid", command=lambda : createGrid(root_window, ent_rows, ent_columns))
     btn_mk_grid.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
     
-    btn_open = tk.Button(sidebar, text="Open", command=open_file)
-    btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
-
-    btn_save = tk.Button(sidebar, text="Save As...", command=save_file)
-    btn_save.grid(row=4, column=0, columnspan=2, padx=5)
+    # TODO: Figure out how to open a crossword puzzle file
+    #btn_open = tk.Button(sidebar, text="Open", command=open_file)
+    #btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+    
+    # TODO: Figure out how to save a crossword puzzle file
+    #btn_save = tk.Button(sidebar, text="Save As...", command=save_file)
+    #btn_save.grid(row=4, column=0, columnspan=2, padx=5)
 
 def createGrid(root_window, ent_rows, ent_columns):
     # Clear old grid and related frames
