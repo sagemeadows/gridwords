@@ -15,7 +15,7 @@ import string
 import tkinter as tk
 
 # Import functions from local modules
-from handleFiles import open_file, save_file
+from handle_files import open_file, save_file
 from indices import Entry, updateClueIndices, spreadIndices
 from move import moveUp, moveDown, moveLeft, moveRight, select, highlight
 from datasearch import getPossWords, allPossWords
