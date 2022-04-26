@@ -338,6 +338,9 @@ def createGrid(root_window, ent_rows, ent_columns):
     # Create frame for WIP words
     createWIPwords(root_window) 
 
+    # remove focus from end_rows/_columns by setting it on root_window
+    root_window.focus_set()
+
 def createWIPwords(root_window):
     global frames_dict
     for key,frame in frames_dict.items():
@@ -380,8 +383,7 @@ def insertLetter(event):
     if "cell_grid" in frames_dict:
         if frames_dict["cell_grid"].mode == 'fill':
             key = event.char.upper()
-            if key in string.ascii_uppercase: #ascii_letters:
-                #print(f"DEBUG\tLetter = {event.char}")
+            if key and key >= 'A' and key <= 'Z':
                 frames_dict["cell_grid"].setCellLetter(key)
                 createWIPwords(root_window)
 
