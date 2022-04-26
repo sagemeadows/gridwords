@@ -18,6 +18,9 @@ RED = '#ff0000'
 ORANGE = '#ffa500'
 YELLOW = '#ffff00'
 
+SELECTED_CELL_BACKGROUND = YELLOW
+SELECTED_WORD_BACKGROUND = CYAN
+
 def moveUp(event, cellgrid=None):
     if cellgrid.mode == 'fill':
         row = cellgrid.wl[0]
@@ -121,6 +124,6 @@ def select(cell, cellgrid):
 def highlight(cellgrid):
     # set colors
     for coord in cellgrid.wword.coords:
-        cellgrid.cells[coord[0]][coord[1]].setColor(CYAN)
-    cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(BLUE)
+        cellgrid.cells[coord[0]][coord[1]].setColor(SELECTED_WORD_BACKGROUND)
+    cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].setColor(SELECTED_CELL_BACKGROUND)
 
