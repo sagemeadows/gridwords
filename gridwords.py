@@ -11,7 +11,6 @@
 import sys
 import os
 import re
-import string
 import tkinter as tk
 
 # Import functions from local modules
