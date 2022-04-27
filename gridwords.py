@@ -380,11 +380,16 @@ def createWIPwords(root_window):
 
 def insertLetter(event):
     if "cell_grid" in frames_dict:
-        if frames_dict["cell_grid"].mode == 'fill':
+        cellgrid = frames_dict["cell_grid"]
+        if cellgrid.mode == 'fill':
             key = event.char.upper()
             if key and key >= 'A' and key <= 'Z':
-                frames_dict["cell_grid"].setCellLetter(key)
+                cellgrid.setCellLetter(key)
                 createWIPwords(root_window)
+                if cellgrid.wdirec == 'across':
+                    moveRight(None, cellgrid=cellgrid)
+                elif cellgrid.wdirec == 'down':
+                    moveDown(None, cellgrid=cellgrid)
 
 def deleteLetter(event):
     if "cell_grid" in frames_dict:
