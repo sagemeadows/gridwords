@@ -8,9 +8,10 @@
 # Create and fill crossword puzzle grids.
 #
 
-import sys
+import logging
 import os
 import re
+import sys
 import tkinter as tk
 
 # Import functions from local modules
@@ -18,6 +19,12 @@ from handle_files import open_file, save_file
 from indices import Entry, updateClueIndices, spreadIndices
 from move import moveUp, moveDown, moveLeft, moveRight, select, highlight
 from datasearch import getPossWords, allPossWords
+
+LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
+LOGGER_LEVEL = logging.INFO
+#LOGGER_LEVEL = logging.DEBUG
+logging.basicConfig( format=LOGGER_FORMAT, level=LOGGER_LEVEL)
+logger = logging.getLogger(__name__)
 
 # Print instructions
 instructions = """
@@ -57,7 +64,7 @@ class Cell(tk.Frame):
         self.grid_propagate(0)
         self.rowconfigure(0, weight = 1)
         self.columnconfigure(0, weight = 1)
-        
+
         # declare a 'letter' data member for updating the text of the button
         self.letter = tk.StringVar()
         self.letter.set('.')
@@ -85,13 +92,13 @@ class Cell(tk.Frame):
         self.clue_label.place(x=INDEX_MARGIN, y=INDEX_MARGIN)
         self.clue_label.bind('<Button-1>', self.onClick)
         self.clue_label.bind('<Button-3>', self.onRightClick)
-        
+
         self.across_num = 0
         self.across_pos = -1
-        
+
         self.down_num = 0
         self.down_pos = -1
-        
+
 
     def setText(self, text):
         # update self.text variable which will automatically update the self.button's text
@@ -109,10 +116,10 @@ class Cell(tk.Frame):
             else:
                 color_hex = WHITE
             self.setColor(color_hex)
-            
+
             # tell the grid to make the symmetric counterpart cell agree
             self.master.onCellClick(self.row, self.column)
-        
+
         elif self.master.mode == 'fill':
             if color_hex != BLACK:
                 ## reset old working word, if it exists
@@ -122,12 +129,12 @@ class Cell(tk.Frame):
 
                 ## set new working letter
                 #self.master.wl = (self.row, self.column)
-                ##print(f"DEBUG\tWorking Cell: {self.master.wl}")
-                
+                logger.debug(f"Working Cell: {self.master.wl}")
+
                 # select and highlight new working word and letter
                 select(self, self.master)
                 highlight(self.master)
-    
+
     def onScroll(self, event):
         if self.master.mode == 'fill':
             color_hex = self.button['background']
@@ -137,18 +144,18 @@ class Cell(tk.Frame):
                     self.master.wdirec = 'down'
                 elif self.master.wdirec == 'down':
                     self.master.wdirec = 'across'
-                
+
                 # click cell
                 self.onClick()
-    
+
     def onRightClick(self, event):
         if self.master.mode == 'fill':
             color_hex = self.button['background']
             if color_hex != BLACK:
                 select(self, self.master)
-                #print(f"DEBUG\tWorking cell: ({self.master.wl[0]}, {self.master.wl[1]})")
+                logger.debug(f"Working cell: ({self.master.wl[0]}, {self.master.wl[1]})")
                 getPossWords(self.master)
-                
+
                 #entry = self.master.
 
     def setColor(self, color_hex):
@@ -162,25 +169,25 @@ class Cell(tk.Frame):
 # Create a CellGrid class that derives from tk.Frame
 # it will have a grid of Cells
 class CellGrid(tk.Frame):
-    # define the ctor method 
+    # define the ctor method
     def __init__(self, master=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
         global frames_dict
         frames_dict["cell_grid"] = self
-        
+
         # set mode
         self.mode = 'grid'
-        
+
         # create cells array
         self.cells = []
-        
+
         # create entries dict
         self.words = {}
-        
+
         for row in range(ROWS):
             self.cells.append([])
-            
+
             for column in range(COLUMNS):
                 # create a Cell with 'self' as parent
                 cell = Cell(self)
@@ -191,19 +198,19 @@ class CellGrid(tk.Frame):
                 self.cells[row].append(cell)
                 self.cells[row][column].row = row
                 self.cells[row][column].column = column
-                
-        
+
+
         updateClueIndices(self)
         spreadIndices(self)
         createWIPwords(self.master)
-        
+
         # keep track of working letter coordinates
         self.wl = ()
         # keep track of working direction and word
         self.wdirec = 'across'
         self.wword = None
-        
-        #print(f"DEBUG\tCells Grid: {self.cells}")
+
+        logger.debug(f"Cells Grid: {self.cells}")
 
 
     def onCellClick(self, row, column):
@@ -232,18 +239,18 @@ class CellGrid(tk.Frame):
             self.words[d_index].letters[working_cell.down_pos] = key
             self.words[d_index].updateWord()
             #self.words[str(working_cell.down_num)][0][1][working_cell.down_pos] = key
-        
-        #print(f"DEBUG\tWords: {self.words}")
+
+        logger.debug(f"Words: {self.words}")
 
 
 class Topbar(tk.Frame):
-    # define the ctor method 
+    # define the ctor method
     def __init__(self, master=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=WHITE, bd=2)
         global frames_dict
         frames_dict["topbar"] = self
-        
+
         # create mode buttons
         self.grid_btn = tk.Button(self, text="Edit Grid", bg=GRAY1, command=lambda : self.gridMode(frames_dict["cell_grid"]))
         self.fill_btn = tk.Button(self, text="Fill Words", bg=GRAY2, command=lambda : self.fillMode(frames_dict["cell_grid"]))
@@ -251,9 +258,9 @@ class Topbar(tk.Frame):
         self.grid_btn.grid(row=0, column=0)
         self.fill_btn.grid(row=0, column=1, padx=10)
         #self.clue_btn.grid(row=0, column=2)
-        
+
         self.search_btn = tk.Button(self, text="Poss Words", bg=GRAY2, command=lambda : allPossWords(frames_dict["cell_grid"]))
-    
+
     def gridMode(self, cellgrid):
         cellgrid.mode = 'grid'
         self.grid_btn['background'] = GRAY1
@@ -269,7 +276,7 @@ class Topbar(tk.Frame):
                 cell = cellgrid.cells[row][column]
                 if cell.getColor() != BLACK:
                     cell.setColor(WHITE)
-    
+
     def fillMode(self, cellgrid):
         cellgrid.mode = 'fill'
         self.grid_btn['background'] = GRAY2
@@ -283,29 +290,29 @@ def buildWindow(root_window):
     # Create gridwords logo in top left corner (TODO)
     logo = tk.Label(root_window, text="LOGO", background=YELLOW) # temporary
     logo.grid(row=0, column=0, sticky="nw")
-    
+
     # Create sidebar
     sidebar = tk.Frame(root_window, relief=tk.FLAT, bd=20, bg=WHITE)
     sidebar.grid(row=1, column=0)
-    
+
     # create things to go in sidebar
     lbl_rows = tk.Label(sidebar, text="Number of rows:", bg=WHITE)
     lbl_rows.grid(row=0, column=0)
     ent_rows = tk.Entry(sidebar, width=3, highlightcolor=YELLOW)
     ent_rows.grid(row=0, column=1)
-    
+
     lbl_columns = tk.Label(sidebar, text="Number of columns:", bg=WHITE)
     lbl_columns.grid(row=1, column=0)
     ent_columns = tk.Entry(sidebar, width=3, highlightcolor=YELLOW)
     ent_columns.grid(row=1, column=1)
-    
+
     btn_mk_grid = tk.Button(sidebar, text="Create Grid", command=lambda : createGrid(root_window, ent_rows, ent_columns))
     btn_mk_grid.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
-    
+
     # TODO: Figure out how to open a crossword puzzle file
     #btn_open = tk.Button(sidebar, text="Open", command=open_file)
     #btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
-    
+
     # TODO: Figure out how to save a crossword puzzle file
     #btn_save = tk.Button(sidebar, text="Save As...", command=save_file)
     #btn_save.grid(row=4, column=0, columnspan=2, padx=5)
@@ -314,7 +321,7 @@ def createGrid(root_window, ent_rows, ent_columns):
     # Clear old grid and related frames
     for key,frame in frames_dict.items():
         frame.destroy()
-    
+
     # Create grid
     global ROWS
     global COLUMNS
@@ -327,15 +334,15 @@ def createGrid(root_window, ent_rows, ent_columns):
     root_window.bind("<Down>", lambda e: moveDown(e, cellgrid=frames_dict["cell_grid"]))
     root_window.bind("<Left>", lambda e: moveLeft(e, cellgrid=frames_dict["cell_grid"]))
     root_window.bind("<Right>", lambda e: moveRight(e, cellgrid=frames_dict["cell_grid"]))
-    
+
     # Create top bar with mode button
     topbar = Topbar(root_window)
     topbar.grid(row=0, column=1)
     frames_dict["topbar"] = topbar
     topbar_dict = {}
-    
+
     # Create frame for WIP words
-    createWIPwords(root_window) 
+    createWIPwords(root_window)
 
     # remove focus from end_rows/_columns by setting it on root_window
     root_window.focus_set()
@@ -345,7 +352,7 @@ def createWIPwords(root_window):
     for key,frame in frames_dict.items():
         if key == "wip_words":
             frame.destroy()
-    
+
     wip_words = tk.Frame(root_window, relief=tk.FLAT, bd=2, bg=WHITE)
     wip_words.grid(row=2, column=1)
     frames_dict["wip_words"] = wip_words
@@ -365,18 +372,18 @@ def createWIPwords(root_window):
         word = tk.StringVar()
         word.set(entry.word)
         #word.set(f'{entry.index}. {entry.word}')
-        
+
         if entry.direc == 'across':
             frm = tk.Frame(wip_across, relief=tk.FLAT, bd=2, bg=WHITE)
         elif entry.direc == 'down':
             frm = tk.Frame(wip_down, relief=tk.FLAT, bd=2, bg=WHITE)
-        
+
         lbl = tk.Label(frm, text=f'{entry.index}. ', bd=2, bg=WHITE)
         lbl.grid(row=0, column=0)
         btn = tk.Button(frm, bd=2, textvariable=word)#, command=)
         btn.grid(row=0, column=1)
         frm.pack(side="top")
-        
+
 
 def insertLetter(event):
     if "cell_grid" in frames_dict:
@@ -408,19 +415,19 @@ if __name__ == "__main__":
     root_window = tk.Tk()
     root_window.title("Gridwords")
     root_window.configure(bg=WHITE)
-    
+
     # create dictionary to keep track of frames
     # that may later need to be updated
     # (via deletion and recreation)
     frames_dict = {}
 
     buildWindow(root_window)
-    
+
     # bind keypresses
     root_window.bind("<Key>", insertLetter)
     root_window.bind("<BackSpace>", deleteLetter)
     root_window.bind("<Escape>", lambda e: quit(e))
-    
+
     # start handling UI events
     root_window.mainloop()
 
