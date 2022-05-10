@@ -8,8 +8,15 @@
 # Get possible words for partial words and get clues for decided words.
 #
 
+import logging
 import re
 from move import select
+
+LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
+#LOGGER_LEVEL = logging.INFO
+LOGGER_LEVEL = logging.DEBUG 
+logging.basicConfig( format=LOGGER_FORMAT, level=LOGGER_LEVEL)
+logger = logging.getLogger(__name__)
 
 WHITE = '#ffffff'
 BLACK = '#000000'
@@ -64,9 +71,9 @@ def getPossWords(cellgrid):
     #if cellgrid.wword.poss_words:
     #    createPossWords(cellgrid.wword.poss_words)
     
-    print(f"DEBUG\tPossible words for '{cellgrid.wword.word}':\n\t{cellgrid.wword.poss_words}\n")
+    logger.debug(f"Possible words for '{cellgrid.wword.word}':\n\t{cellgrid.wword.poss_words}\n")
     if len(cellgrid.wword.poss_words) > 50:
-        print(f"\tTotal possible words: {len(cellgrid.wword.poss_words)}\n")
+        logger.info(f"\tTotal possible words: {len(cellgrid.wword.poss_words)}\n")
 
 def allPossWords(cellgrid):
     cellgrid.wword = None
