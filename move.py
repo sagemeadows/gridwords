@@ -8,6 +8,14 @@
 # Move working letter and highlight working word.
 #
 
+import logging
+
+LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
+#LOGGER_LEVEL = logging.INFO
+LOGGER_LEVEL = logging.DEBUG
+logging.basicConfig( format=LOGGER_FORMAT, level=LOGGER_LEVEL)
+logger = logging.getLogger(__name__)
+
 WHITE = '#ffffff'
 BLACK = '#000000'
 GRAY = '#d9d9d9'
@@ -112,7 +120,7 @@ def select(cell, cellgrid):
 
     # set new working letter
     cellgrid.wl = (cell.row, cell.column)
-    #print(f"DEBUG\tWorking Cell: {cellgrid.wl}")
+    logger.debug(f"Working Cell: {cellgrid.wl}")
     
     # get across_num and down_num of new working letter
     acr_num = cellgrid.cells[cellgrid.wl[0]][cellgrid.wl[1]].across_num
