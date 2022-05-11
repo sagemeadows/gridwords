@@ -21,8 +21,8 @@ from move import moveUp, moveDown, moveLeft, moveRight, select, highlight
 from datasearch import getPossWords, allPossWords
 
 LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
-LOGGER_LEVEL = logging.INFO
-#LOGGER_LEVEL = logging.DEBUG
+#LOGGER_LEVEL = logging.INFO
+LOGGER_LEVEL = logging.DEBUG
 logging.basicConfig( format=LOGGER_FORMAT, level=LOGGER_LEVEL)
 logger = logging.getLogger(__name__)
 
@@ -209,6 +209,10 @@ class CellGrid(tk.Frame):
         # keep track of working direction and word
         self.wdirec = 'across'
         self.wword = None
+
+        # bind Shift to changing wdirec
+        self.master.bind("<Shift_L>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
+        self.master.bind("<Shift_R>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
 
         logger.debug(f"Cells Grid: {self.cells}")
 
