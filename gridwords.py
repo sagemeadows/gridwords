@@ -214,6 +214,16 @@ class CellGrid(tk.Frame):
         self.master.bind("<Shift_L>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
         self.master.bind("<Shift_R>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
 
+        # bind movement keys
+        self.master.bind("<Up>", lambda e: moveUp(e, cellgrid=self))
+        self.master.bind("<Down>", lambda e: moveDown(e, cellgrid=self))
+        self.master.bind("<Left>", lambda e: moveLeft(e, cellgrid=self))
+        self.master.bind("<Right>", lambda e: moveRight(e, cellgrid=self))
+
+        # bind letter keys
+        self.master.bind("<Key>", insertLetter)
+        self.master.bind("<BackSpace>", deleteLetter)
+
         logger.debug(f"Cells Grid: {self.cells}")
 
 
@@ -334,10 +344,6 @@ def createGrid(root_window, ent_rows, ent_columns):
     cell_grid = CellGrid(root_window)
     cell_grid.grid(row=1, column=1)
     frames_dict["cell_grid"] = cell_grid
-    root_window.bind("<Up>", lambda e: moveUp(e, cellgrid=frames_dict["cell_grid"]))
-    root_window.bind("<Down>", lambda e: moveDown(e, cellgrid=frames_dict["cell_grid"]))
-    root_window.bind("<Left>", lambda e: moveLeft(e, cellgrid=frames_dict["cell_grid"]))
-    root_window.bind("<Right>", lambda e: moveRight(e, cellgrid=frames_dict["cell_grid"]))
 
     # Create top bar with mode button
     topbar = Topbar(root_window)
@@ -427,9 +433,7 @@ if __name__ == "__main__":
 
     buildWindow(root_window)
 
-    # bind keypresses
-    root_window.bind("<Key>", insertLetter)
-    root_window.bind("<BackSpace>", deleteLetter)
+    # bind key escape
     root_window.bind("<Escape>", lambda e: quit(e))
 
     # start handling UI events
