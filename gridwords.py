@@ -108,6 +108,7 @@ class Cell(tk.Frame):
         self.clue_index.set(str(index))
 
     def onClick(self, args=None):
+        logger.debug(f"Clicked Cell: ({self.row}, {self.column})")
         color_hex = self.button['background']
         if self.master.mode == 'grid':
             #color_hex = self.button['background']
@@ -122,15 +123,6 @@ class Cell(tk.Frame):
 
         elif self.master.mode == 'fill':
             if color_hex != BLACK:
-                ## reset old working word, if it exists
-                #if self.master.wword:
-                #    for coord in self.master.wword.coords:
-                #        self.master.cells[coord[0]][coord[1]].setColor(WHITE)
-
-                ## set new working letter
-                #self.master.wl = (self.row, self.column)
-                logger.debug(f"Working Cell: {self.master.wl}")
-
                 # select and highlight new working word and letter
                 select(self, self.master)
                 highlight(self.master)
