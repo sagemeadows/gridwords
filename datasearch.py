@@ -8,6 +8,7 @@
 # Get possible words for partial words and get clues for decided words.
 #
 
+import time
 import os
 import logging
 import re
@@ -39,12 +40,13 @@ def getPossWords(cellgrid):
 
     # get search pattern
     match_length = len(cellgrid.wword.word)
-    match_word = cellgrid.wword.word.replace('.', '[A-Z]')
+    match_word = '^' + cellgrid.wword.word.replace('.', '[A-Z]') + '$'
     match_pattern = re.compile(match_word)
 
     # open words file
     file_handle = open(words_filename, 'r')
     next(file_handle)
+    start = time.time()
     while True:
         line = file_handle.readline()
         if not line:
@@ -54,8 +56,8 @@ def getPossWords(cellgrid):
         line = line.replace('\n', '')
         line = line.split(',', 2)
         #logger.debug(print(line))
-        word_length = line[0]
         word = line[1]
+        word_length = len(word)
         clue = line[2]#[:-1]
 
         if match_length == word_length:
@@ -65,6 +67,8 @@ def getPossWords(cellgrid):
                     cellgrid.wword.poss_words.append(mp[0])
 
     file_handle.close()
+    end = time.time()
+    logger.debug(f"Time to find poss words: {end - start} secs")
 
     # color working word according to 
     # number of possible words
@@ -95,13 +99,14 @@ def allPossWords(cellgrid):
     # and get search patterns
     for key,entry in cellgrid.words.items():
         entry.poss_words.clear()
-        match_word = entry.word.replace('.', '[A-Z]')
+        match_word = '^' + entry.word.replace('.', '[A-Z]') + '$'
         match_pattern = re.compile(match_word)
         match_patterns[f'{entry.index} {entry.direc}'] = match_pattern
 
     # open words file
     file_handle = open(words_filename, 'r')
     next(file_handle)
+    start = time.time()
     while True:
         line = file_handle.readline()
         if not line:
@@ -122,6 +127,8 @@ def allPossWords(cellgrid):
                     cellgrid.words[entry].poss_words.append(mp[0])
 
     file_handle.close()
+    end = time.time()
+    logger.debug(f"Time to find all poss words: {end - start} secs")
 
     # color cells according to number of poss words
     for row in range(len(cellgrid.cells)):
