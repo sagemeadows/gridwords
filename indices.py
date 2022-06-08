@@ -10,6 +10,8 @@
 
 import logging
 import tkinter as tk
+from move import select
+from datasearch import getPossWords
 
 LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
 #LOGGER_LEVEL = logging.INFO
@@ -42,7 +44,7 @@ class Entry:
         self.lbl = tk.Label(self.frm, text=f'{self.index}. ', bd=2, bg=WHITE)
         self.lbl.grid(row=0, column=0)
         self.btn_text = tk.StringVar()
-        self.btn = tk.Button(self.frm, bd=2, textvariable=self.btn_text)#, command=self.onEntryButtonClick)
+        self.btn = tk.Button(self.frm, bd=2, textvariable=self.btn_text, command=self.onEntryButtonClick)
         self.btn.grid(row=0, column=1)
         self.frm.pack(side="top")
 
@@ -52,11 +54,14 @@ class Entry:
         self.btn_text.set(self.word)
         #logger.debug(f"Updated {self.index} {self.direc}")
 
-    #def onEntryButtonClick(self):
-    #    if self.master_cellgrid.mode == 'fill':
-    #        
-        #elif self.master_cellgrid.mode == 'clue':
-
+    def onEntryButtonClick(self):
+        cellgrid = self.master_window.cellgrid
+        if cellgrid.mode == 'fill':
+            cellgrid.wdirec = self.direc
+            cell = cellgrid.cells[self.coords[0][0]][self.coords[0][1]]
+            select(cell, cellgrid)
+            getPossWords(cellgrid)
+        #elif cellgrid.mode == 'clue':
 
 def updateClueIndices(cellgrid):
     # (re)start counter

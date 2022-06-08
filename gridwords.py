@@ -148,8 +148,6 @@ class Cell(tk.Frame):
                 logger.debug(f"Working cell: ({self.master.wl[0]}, {self.master.wl[1]})")
                 getPossWords(self.master)
 
-                #entry = self.master.
-
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
         self.clue_label.configure(background=color_hex, activebackground=color_hex)
