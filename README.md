@@ -15,7 +15,7 @@ Gridwords is a custom crossword puzzle maker that lets you design crossword puzz
 - Press ESC or close the window to quit.
 
 ## TO-DO:
-- Get buttons for word entries to work.
+- Create a way to pick from possible words and have the selected word inserted into the puzzle.
 - Create a Clue-Picking Mode and a way to pick clues.
 - Create a way to add new words and clues to the database.
 - Figure out scrollbars.
