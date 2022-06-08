@@ -189,11 +189,6 @@ class CellGrid(tk.Frame):
                 self.cells[row][column].row = row
                 self.cells[row][column].column = column
 
-
-        updateClueIndices(self)
-        spreadIndices(self)
-        #self.master.createWIPwords()
-
         # keep track of working letter coordinates
         self.wl = ()
         # keep track of working direction and word
@@ -224,9 +219,9 @@ class CellGrid(tk.Frame):
         opp_row = 0 - row - 1
 
         self.cells[opp_row][opp_column].setColor(color_hex)
+        self.master.createWIPwords()
         updateClueIndices(self)
         spreadIndices(self)
-        self.master.createWIPwords()
 
     def setCellLetter(self, key):
         working_cell = self.cells[self.wl[0]][self.wl[1]]
@@ -336,25 +331,8 @@ class WIPwordsFrame(tk.Frame):
         self.lbl_across.pack(side="top")
         self.lbl_down = tk.Label(self.wip_down, text="DOWN", bg=WHITE, bd=2)
         self.lbl_down.pack(side="top")
-        
-        # fill in wip words
-        self.wip_words_dict = self.master.cellgrid.words
-        for key,entry in self.wip_words_dict.items():
-            word = tk.StringVar()
-            word.set(entry.word)
-            #word.set(f'{entry.index}. {entry.word}')
 
-            if entry.direc == 'across':
-                frm = tk.Frame(self.wip_across, relief=tk.FLAT, bd=2, bg=WHITE)
-            elif entry.direc == 'down':
-                frm = tk.Frame(self.wip_down, relief=tk.FLAT, bd=2, bg=WHITE)
-
-            lbl = tk.Label(frm, text=f'{entry.index}. ', bd=2, bg=WHITE)
-            lbl.grid(row=0, column=0)
-            btn = tk.Button(frm, bd=2, textvariable=word)#, command=)
-            btn.grid(row=0, column=1)
-            frm.pack(side="top")
-
+        logger.debug("New WIP Words")
 
 class RootWindow(tk.Tk):
     # define the ctor method
@@ -393,15 +371,18 @@ class RootWindow(tk.Tk):
 
         self.ROWS = int(ent_rows.get())
         self.COLUMNS = int(ent_columns.get())
-        
+
         self.cellgrid = CellGrid(self)
         self.cellgrid.grid(row=1, column=1)
-        
+
         self.topbar = TopBar(self)
         self.topbar.grid(row=0, column=1)
-        
+
         self.wip_words = WIPwordsFrame(self)
         self.wip_words.grid(row=2, column=1)
+
+        updateClueIndices(self.cellgrid)
+        spreadIndices(self.cellgrid)
 
     def createWIPwords(self):
         if self.wip_words:
@@ -415,8 +396,14 @@ class RootWindow(tk.Tk):
             if self.cellgrid.mode == 'fill':
                 key = event.char.upper()
                 if key and key >= 'A' and key <= 'Z':
+                    # set cell letter
                     self.cellgrid.setCellLetter(key)
-                    self.createWIPwords()
+
+                    # update WIP words
+                    for key,entry in self.cellgrid.words.items():
+                        entry.updateWord()
+
+                    # move selected cell
                     if self.cellgrid.wdirec == 'across':
                         moveRight(None, cellgrid=self.cellgrid)
                     elif self.cellgrid.wdirec == 'down':
@@ -425,8 +412,12 @@ class RootWindow(tk.Tk):
     def deleteLetter(self, event):
         if self.cellgrid:
             if self.cellgrid.mode == 'fill':
+                # set cell letter to '.'
                 self.cellgrid.setCellLetter('.')
-                self.createWIPwords()
+
+                # update WIP words
+                for key,entry in self.cellgrid.words.items():
+                    entry.updateWord()
 
     def quit(self, event):
         self.destroy()
