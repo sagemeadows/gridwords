@@ -22,7 +22,8 @@ BLACK = '#000000'
 
 
 class Entry:
-    def __init__(self, index, direction):
+    def __init__(self, cellgrid, index, direction):
+        self.master_window = cellgrid.master
         self.index = index
         self.direc = direction
 
@@ -33,9 +34,28 @@ class Entry:
         self.clue = ''
         self.poss_words = []
 
+        # put entry in cellgrid words dict
+        self.master_window.cellgrid.words[f'{self.index} {self.direc}'] = self
+        
+        # create entry frame & button
+        exec(f"self.frm = tk.Frame(self.master_window.wip_words.wip_{self.direc}, relief=tk.FLAT, bd=2, bg=WHITE)")
+        self.lbl = tk.Label(self.frm, text=f'{self.index}. ', bd=2, bg=WHITE)
+        self.lbl.grid(row=0, column=0)
+        self.btn_text = tk.StringVar()
+        self.btn = tk.Button(self.frm, bd=2, textvariable=self.btn_text)#, command=self.onEntryButtonClick)
+        self.btn.grid(row=0, column=1)
+        self.frm.pack(side="top")
+
     def updateWord(self):
         self.word = ''
         self.word = self.word.join(self.letters)
+        self.btn_text.set(self.word)
+        #logger.debug(f"Updated {self.index} {self.direc}")
+
+    #def onEntryButtonClick(self):
+    #    if self.master_cellgrid.mode == 'fill':
+    #        
+        #elif self.master_cellgrid.mode == 'clue':
 
 
 def updateClueIndices(cellgrid):
@@ -173,16 +193,14 @@ def updateClueIndices(cellgrid):
                     cell.across_num = counter
 
                     # create across entry and add to words dict
-                    entry = Entry(counter, 'across')
-                    cellgrid.words[f'{counter} across'] = entry
+                    entry = Entry(cellgrid, counter, 'across')
 
                 # if cell is the start of a vertical word
                 if word_down:
                     cell.down_num = counter
 
                     # create down entry and add to words dict
-                    entry = Entry(counter, 'down')
-                    cellgrid.words[f'{counter} down'] = entry
+                    entry = Entry(cellgrid, counter, 'down')
 
             else: # cell is black
                 cell.setClueIndex(-1)
