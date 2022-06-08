@@ -206,7 +206,8 @@ class CellGrid(tk.Frame):
 
         # bind letter keys
         self.master.bind("<Key>", self.master.insertLetter)
-        self.master.bind("<BackSpace>", self.master.deleteLetter)
+        self.master.bind("<BackSpace>", self.master.backspaceLetter)
+        self.master.bind("<Delete>", self.master.deleteLetter)
 
         logger.debug(f"Cells Grid: {self.cells}")
 
@@ -410,6 +411,22 @@ class RootWindow(tk.Tk):
                         moveRight(None, cellgrid=self.cellgrid)
                     elif self.cellgrid.wdirec == 'down':
                         moveDown(None, cellgrid=self.cellgrid)
+
+    def backspaceLetter(self, event):
+        if self.cellgrid:
+            if self.cellgrid.mode == 'fill':
+                # set cell letter to '.'
+                self.cellgrid.setCellLetter('.')
+
+                # update WIP words
+                for key,entry in self.cellgrid.words.items():
+                    entry.updateWord()
+
+                # move selected cell
+                if self.cellgrid.wdirec == 'across':
+                    moveLeft(None, cellgrid=self.cellgrid)
+                elif self.cellgrid.wdirec == 'down':
+                    moveUp(None, cellgrid=self.cellgrid)
 
     def deleteLetter(self, event):
         if self.cellgrid:
