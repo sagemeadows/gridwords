@@ -45,8 +45,10 @@ class Entry:
         self.lbl.grid(row=0, column=0)
         self.btn_text = tk.StringVar()
         self.btn = tk.Button(self.frm, bd=2, textvariable=self.btn_text, command=self.onEntryButtonClick)
+        self.btn_font = self.master_window.wip_words.font
+        self.btn['font'] = self.btn_font
         self.btn.grid(row=0, column=1)
-        self.frm.pack(side="top")
+        self.frm.pack()
 
     def updateWord(self):
         self.word = ''
@@ -89,7 +91,6 @@ def updateClueIndices(cellgrid):
                 # clear any old directions indices to 0
                 cell.across_num = 0
                 cell.down_num = 0
-
 
                 give_num = False
                 word_across = False

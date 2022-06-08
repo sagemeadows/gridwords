@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import tkinter as tk
+import tkinter.font as tkf
 
 # Import functions from local modules
 from handle_files import open_file, save_file
@@ -317,7 +318,10 @@ class WIPwordsFrame(tk.Frame):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=WHITE, bd=2)
         #self.grid(row=2, column=1)
-        
+
+        # establish font for entry buttons
+        self.font = tkf.Font(family='Terminal')
+
         # create across and down word frames
         self.wip_across = tk.Frame(self, relief=tk.FLAT, bd=2, bg=WHITE)
         self.wip_across.grid(row=0, column=0)
