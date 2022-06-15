@@ -310,7 +310,8 @@ class TopBar(tk.Frame):
         self.fill_btn['background'] = GRAY2
         self.clue_btn['background'] = GRAY1
         self.search_btn.grid_forget()
-        self.reset(cellgrid)
+        #self.reset(cellgrid)
+        allPossWords(cellgrid)
 
     def reset(self, cellgrid):
         cellgrid.wl = ()
