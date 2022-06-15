@@ -34,7 +34,10 @@ def moveUp(event, cellgrid=None):
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if row == 0:
-            cellgrid.wl = (len(cellgrid.cells), column)
+            if column > 0:
+                cellgrid.wl = (len(cellgrid.cells), column-1)
+            else:
+                cellgrid.wl = (len(cellgrid.cells), len(cellgrid.cells[0])-1)
             moveUp(None, cellgrid=cellgrid)
 
         elif row > 0:
@@ -53,7 +56,10 @@ def moveDown(event, cellgrid=None):
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if row == len(cellgrid.cells) - 1:
-            cellgrid.wl = (-1, column)
+            if column < len(cellgrid.cells[0]) - 1:
+                cellgrid.wl = (-1, column+1)
+            else:
+                cellgrid.wl = (-1, 0)
             moveDown(None, cellgrid=cellgrid)
 
         elif row < len(cellgrid.cells) - 1:
