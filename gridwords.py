@@ -282,10 +282,10 @@ class TopBar(tk.Frame):
         # create mode buttons
         self.grid_btn = tk.Button(self, text="Edit Grid", bg=GRAY1, command=lambda : self.gridMode(self.master.cellgrid))
         self.fill_btn = tk.Button(self, text="Fill Words", bg=GRAY2, command=lambda : self.fillMode(self.master.cellgrid))
-        #self.clue_btn = tk.Button(self, text="Find Clues", bg=GRAY2, command=lambda : self.clueMode(self.master.cellgrid))
+        self.clue_btn = tk.Button(self, text="Find Clues", bg=GRAY2, command=lambda : self.clueMode(self.master.cellgrid))
         self.grid_btn.grid(row=0, column=0)
-        self.fill_btn.grid(row=0, column=1, padx=10)
-        #self.clue_btn.grid(row=0, column=2)
+        self.fill_btn.grid(row=0, column=1, padx=10, pady=10)
+        self.clue_btn.grid(row=0, column=2)
 
         self.search_btn = tk.Button(self, text="Poss Words", bg=GRAY2, command=lambda : allPossWords(self.master.cellgrid))
 
@@ -293,8 +293,26 @@ class TopBar(tk.Frame):
         cellgrid.mode = 'grid'
         self.grid_btn['background'] = GRAY1
         self.fill_btn['background'] = GRAY2
-        #self.clue_btn['background'] = GRAY2
+        self.clue_btn['background'] = GRAY2
         self.search_btn.grid_forget()
+        self.reset(cellgrid)
+
+    def fillMode(self, cellgrid):
+        cellgrid.mode = 'fill'
+        self.grid_btn['background'] = GRAY2
+        self.fill_btn['background'] = GRAY1
+        self.clue_btn['background'] = GRAY2
+        self.search_btn.grid(row=1, column=1, pady=10)
+
+    def clueMode(self, cellgrid):
+        cellgrid.mode = 'clue'
+        self.grid_btn['background'] = GRAY2
+        self.fill_btn['background'] = GRAY2
+        self.clue_btn['background'] = GRAY1
+        self.search_btn.grid_forget()
+        self.reset(cellgrid)
+
+    def reset(self, cellgrid):
         cellgrid.wl = ()
         cellgrid.wword = None
         cellgrid.wdirec = 'across'
@@ -304,13 +322,6 @@ class TopBar(tk.Frame):
                 cell = cellgrid.cells[row][column]
                 if cell.getColor() != BLACK:
                     cell.setColor(WHITE)
-
-    def fillMode(self, cellgrid):
-        cellgrid.mode = 'fill'
-        self.grid_btn['background'] = GRAY2
-        self.fill_btn['background'] = GRAY1
-        #self.clue_btn['background'] = GRAY2
-        self.search_btn.grid(row=1, column=1, pady=10)
 
 
 class WIPwordsFrame(tk.Frame):
