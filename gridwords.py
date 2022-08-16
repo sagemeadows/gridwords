@@ -357,7 +357,39 @@ class RootWindow(tk.Tk):
         self.title("Gridwords")
         self.configure(bg=WHITE)
 
-        # default rows and columsn for grid
+        ## establish maximum window size as fullscreen
+        #self.width= self.winfo_screenwidth()
+        #self.height= self.winfo_screenheight()
+        #self.maxsize(self.width, self.height)
+
+        # create a horizontal scrollbar for window
+        h = tk.Scrollbar(self, orient = 'horizontal')
+        # attach Scrollbar to root window at the bootom
+        h.pack(side='bottom', fill='x')
+
+        # create a vertical scrollbar for window
+        v = tk.Scrollbar(self)
+        # attach Scrollbar to root window on right side
+        v.pack(side='right', fill='y')
+
+        # create root frame to hold all other frames
+        self.root_frame = RootFrame(self)
+        self.root_frame.pack()
+
+        # quick quit
+        self.bind("<Escape>", lambda e: self.quit(e))
+
+    def quit(self, event):
+        self.destroy()
+
+
+class RootFrame(tk.Frame):
+    # define the ctor method
+    def __init__(self, master=None):
+        # initialize the base class
+        tk.Frame.__init__(self, master, bg=WHITE, bd=2)
+
+        # default rows and columns for grid
         self.ROWS = 3
         self.COLUMNS = 3
         
@@ -377,8 +409,6 @@ class RootWindow(tk.Tk):
         # establish list of deletable frame names
         self.deletable = ["cellgrid", "topbar", "wip_words"]
 
-        # quick quit
-        self.bind("<Escape>", lambda e: self.quit(e))
 
     def createGrid(self, ent_rows, ent_columns):
         for frame in self.deletable:
@@ -449,9 +479,6 @@ class RootWindow(tk.Tk):
                 # update WIP words
                 for key,entry in self.cellgrid.words.items():
                     entry.updateWord()
-
-    def quit(self, event):
-        self.destroy()
 
 
 
