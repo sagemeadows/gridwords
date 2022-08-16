@@ -30,7 +30,7 @@ SELECTED_CELL_BACKGROUND = YELLOW
 SELECTED_WORD_BACKGROUND = CYAN
 
 def moveUp(event, cellgrid=None):
-    if cellgrid.mode == 'fill':
+    if cellgrid.mode != 'grid':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if row == 0:
@@ -52,7 +52,7 @@ def moveUp(event, cellgrid=None):
                 moveUp(None, cellgrid=cellgrid)
 
 def moveDown(event, cellgrid=None):
-    if cellgrid.mode == 'fill':
+    if cellgrid.mode != 'grid':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if row == len(cellgrid.cells) - 1:
@@ -74,7 +74,7 @@ def moveDown(event, cellgrid=None):
                 moveDown(None, cellgrid=cellgrid)
 
 def moveLeft(event, cellgrid=None):
-    if cellgrid.mode == 'fill':
+    if cellgrid.mode != 'grid':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if column == 0:
@@ -96,7 +96,7 @@ def moveLeft(event, cellgrid=None):
                 moveLeft(None, cellgrid=cellgrid)
 
 def moveRight(event, cellgrid=None):
-    if cellgrid.mode == 'fill':
+    if cellgrid.mode != 'grid':
         row = cellgrid.wl[0]
         column = cellgrid.wl[1]
         if column == len(cellgrid.cells[0]) - 1:
