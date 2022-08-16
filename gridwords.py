@@ -194,20 +194,23 @@ class CellGrid(tk.Frame):
         self.wdirec = 'across'
         self.wword = None
 
+        # establish shortcut to root window
+        self.root_window = self.master.master.master.master
+
         # bind Shift to changing wdirec
-        self.master.bind("<Shift_L>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
-        self.master.bind("<Shift_R>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
+        self.root_window.bind("<Shift_L>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
+        self.root_window.bind("<Shift_R>", lambda e: self.cells[self.wl[0]][self.wl[1]].onScroll(e))
 
         # bind movement keys
-        self.master.bind("<Up>", lambda e: moveUp(e, cellgrid=self))
-        self.master.bind("<Down>", lambda e: moveDown(e, cellgrid=self))
-        self.master.bind("<Left>", lambda e: moveLeft(e, cellgrid=self))
-        self.master.bind("<Right>", lambda e: moveRight(e, cellgrid=self))
+        self.root_window.bind("<Up>", lambda e: moveUp(e, cellgrid=self))
+        self.root_window.bind("<Down>", lambda e: moveDown(e, cellgrid=self))
+        self.root_window.bind("<Left>", lambda e: moveLeft(e, cellgrid=self))
+        self.root_window.bind("<Right>", lambda e: moveRight(e, cellgrid=self))
 
         # bind letter keys
-        self.master.bind("<Key>", self.master.insertLetter)
-        self.master.bind("<BackSpace>", self.master.backspaceLetter)
-        self.master.bind("<Delete>", self.master.deleteLetter)
+        self.root_window.bind("<Key>", self.master.insertLetter)
+        self.root_window.bind("<BackSpace>", self.master.backspaceLetter)
+        self.root_window.bind("<Delete>", self.master.deleteLetter)
 
         logger.debug(f"Cells Grid: {self.cells}")
 
