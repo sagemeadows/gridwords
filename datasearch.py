@@ -37,7 +37,7 @@ words_filename = f"{cwd}/database.csv"
 
 class SearchWindow(tk.Tk):
     # define the ctor method
-    def __init__(self, mode=None, entry=None):
+    def __init__(self, mode=None, entry=None, poss_clues=None):
         # initialize the base class
         tk.Tk.__init__(self)
         self.configure(bg=WHITE)
@@ -78,17 +78,29 @@ class SearchWindow(tk.Tk):
             btn_font = self.entry.master_window.wip_words.font
             if len(self.entry.poss_words) > 1:
                 for w in self.entry.poss_words:
-                    btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=w, pady=10)
+                    btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=w)#, command=lambda : self.)
                     btn['font'] = btn_font
                     btn.pack(expand=True, fill="both")
+                    logger.debug(f"Created possible words search window for {self.entry.index} {self.entry.direc}")
+            else:
+                self.destroy()
+
         elif self.mode == 'clue':
             self.title(f"Possible Clues for {self.entry.index} {self.entry.direc}")
+            txt_clue = tk.Text(self.scrollable_frame, height=3, width=50, wrap="word")
+            txt_clue.grid(row=0, column=0, sticky="new")
+            btn_submit_clue = tk.Button(self.scrollable_frame, relief=tk.RAISED, bd=3, text="Save & Use Clue")#, command=lambda : self.)
+            btn_submit_clue.grid(row=1, column=0, pady=10, sticky="n")
+            counter = 0
+            for c in poss_clues:
+                btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=c)#, command=lambda : self.)
+                btn.grid(row=counter+2, column=0, pady=2, sticky="w")
+                counter += 1
+            logger.debug(f"Created possible clues search window for {self.entry.index} {self.entry.direc}")
 
         # quick quit
         self.bind("<Escape>", lambda e: self.quit(e))
 
-        logger.debug(f"Created possible words search window for {self.entry.index} {self.entry.direc}")
-            
 
     def quit(self, event):
         self.destroy()
@@ -226,4 +238,47 @@ def allPossWords(cellgrid):
                     color_hex = YELLOW
 
                 cellgrid.cells[row][column].setColor(color_hex)
+
+
+def getPossClues(entry):
+    if '.' not in entry.word:
+        # get search pattern
+        match_length = len(entry.word)
+        match_word = '^' + entry.word + '$'
+        match_pattern = re.compile(match_word)
+        poss_clues = []
+
+        # open words file
+        file_handle = open(words_filename, 'r')
+        next(file_handle)
+        start = time.time()
+        while True:
+            line = file_handle.readline()
+            if not line:
+                # at end of file
+                break
+
+            line = line.replace('\n', '')
+            line = line.split(',', 2)
+            #logger.debug(print(line))
+            word = line[1]
+            word_length = len(word)
+            clue = line[2]#[:-1]
+
+            if match_length == word_length:
+                mp = match_pattern.findall(word)
+                if mp:
+                    poss_clues.append(clue)
+
+        file_handle.close()
+        end = time.time()
+        logger.debug(f"Time to find all poss clues: {end - start} secs")
+        
+        # open search window with possible clues
+        search_window = SearchWindow(mode='clue', entry=entry, poss_clues=poss_clues)
+        search_window.mainloop()
+
+    else:
+        logger.debug(f"Undetermined word for {entry.index} {entry.direc}; cannot find clues for undertimined words")
+
 

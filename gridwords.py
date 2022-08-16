@@ -19,7 +19,7 @@ import tkinter.font as tkf
 from handle_files import open_file, save_file
 from indices import Entry, updateClueIndices, spreadIndices
 from move import moveUp, moveDown, moveLeft, moveRight, select, highlight
-from datasearch import getPossWords, allPossWords
+from datasearch import getPossWords, allPossWords, getPossClues
 
 LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
 #LOGGER_LEVEL = logging.INFO
@@ -122,14 +122,15 @@ class Cell(tk.Frame):
             # tell the grid to make the symmetric counterpart cell agree
             self.master.onCellClick(self.row, self.column)
 
-        elif self.master.mode == 'fill':
+        #elif self.master.mode == 'fill':
+        else:
             if color_hex != BLACK:
                 # select and highlight new working word and letter
                 select(self, self.master)
                 highlight(self.master)
 
     def onScroll(self, event):
-        if self.master.mode == 'fill':
+        if self.master.mode != 'grid':
             color_hex = self.button['background']
             if color_hex != BLACK:
                 # change working direc
@@ -142,12 +143,15 @@ class Cell(tk.Frame):
                 self.onClick()
 
     def onRightClick(self, event):
-        if self.master.mode == 'fill':
-            color_hex = self.button['background']
-            if color_hex != BLACK:
+        color_hex = self.button['background']
+        if color_hex != BLACK:
+            if self.master.mode != 'grid':
                 select(self, self.master)
                 logger.debug(f"Working cell: ({self.master.wl[0]}, {self.master.wl[1]})")
+            if self.master.mode == 'fill':
                 getPossWords(self.master)
+            elif self.master.mode == 'clue':
+                getPossClues(self.master.wword)
 
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
@@ -314,7 +318,7 @@ class TopBar(tk.Frame):
         self.clue_btn['background'] = GRAY1
         self.search_btn.grid_forget()
         #self.reset(cellgrid)
-        allPossWords(cellgrid)
+        #allPossWords(cellgrid)
 
     def reset(self, cellgrid):
         cellgrid.wl = ()

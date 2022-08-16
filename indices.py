@@ -11,7 +11,7 @@
 import logging
 import tkinter as tk
 from move import select
-from datasearch import getPossWords
+from datasearch import getPossWords, getPossClues
 
 LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
 #LOGGER_LEVEL = logging.INFO
@@ -58,12 +58,14 @@ class Entry:
 
     def onEntryButtonClick(self):
         cellgrid = self.master_window.cellgrid
-        if cellgrid.mode == 'fill':
+        if cellgrid.mode != 'grid':
             cellgrid.wdirec = self.direc
             cell = cellgrid.cells[self.coords[0][0]][self.coords[0][1]]
             select(cell, cellgrid)
+        if cellgrid.mode == 'fill':
             getPossWords(cellgrid)
-        #elif cellgrid.mode == 'clue':
+        elif cellgrid.mode == 'clue':
+            getPossClues(self)
 
 def updateClueIndices(cellgrid):
     # (re)start counter
