@@ -12,12 +12,17 @@ Gridwords is a custom crossword puzzle maker that lets you design crossword puzz
   - Use arrow keys to move the selected box.
   - Scroll over a box to change the direction of the selected word.
   - Right click on a box to see the number of possible words that can fill the selected word.
+- In Clue-Filling Mode:
+  - Click on a box to select it.
+  - Use arrow keys to move the selected box.
+  - Scroll over a box to change the direction of the selected word.
+  - Right click on a box to see the possible clues for the selected word.
 - Press ESC or close the window to quit.
 
 ## TO-DO:
-- Create a way to pick from possible words and have the selected word inserted into the puzzle.
-- Create a Clue-Picking Mode and a way to pick clues.
+- Make possible word buttons work so that when pressed they insert their word into the puzzle.
+- Make possible clue buttons work so that when pressed they insert their clue into the puzzle.
 - Create a way to add new words and clues to the database.
-- Figure out scrollbars.
 - Figure out crossword puzzle file formatting, how to open and save files.
+- (Eventually) Fix layout on parts, especially on the scrollable frames.
 
