@@ -362,19 +362,45 @@ class RootWindow(tk.Tk):
         #self.height= self.winfo_screenheight()
         #self.maxsize(self.width, self.height)
 
-        # create a horizontal scrollbar for window
-        h = tk.Scrollbar(self, orient = 'horizontal')
-        # attach Scrollbar to root window at the bootom
-        h.pack(side='bottom', fill='x')
+        ## create a horizontal scrollbar for window
+        #h = tk.Scrollbar(self, orient = 'horizontal')
+        ## attach Scrollbar to root window at the bootom
+        #h.pack(side='bottom', fill='x')
 
-        # create a vertical scrollbar for window
-        v = tk.Scrollbar(self)
-        # attach Scrollbar to root window on right side
-        v.pack(side='right', fill='y')
+        ## create a vertical scrollbar for window
+        #v = tk.Scrollbar(self)
+        ## attach Scrollbar to root window on right side
+        #v.pack(side='right', fill='y')
 
-        # create root frame to hold all other frames
-        self.root_frame = RootFrame(self)
-        self.root_frame.pack()
+        # add frame and canvas for future scrollable frame
+        self.root_frame = tk.Frame(self, bg=WHITE, bd=0)
+        self.root_frame.pack(fill="both", expand=True)#grid(row=0, column=0, sticky="nesw")
+        self.canvas = tk.Canvas(self.root_frame, bg=WHITE)
+        
+        # create scrollbars
+        self.scrollbar_y = tk.Scrollbar(self.root_frame, orient="vertical", command=self.canvas.yview)
+        self.scrollbar_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
+
+        # create main scrollable frame to hold all other frames
+        self.main_frame = MainFrame(self.canvas)
+        #self.main_frame.pack()
+
+        self.main_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
+
+        self.canvas.create_window((0, 0), window=self.main_frame, anchor="nw")
+
+        self.canvas.configure(yscrollcommand=self.scrollbar_y.set)
+        self.canvas.configure(xscrollcommand=self.scrollbar_x.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar_y.pack(side="right", fill="y")
+        self.scrollbar_x.pack(side="bottom", fill="x")
+
 
         # quick quit
         self.bind("<Escape>", lambda e: self.quit(e))
@@ -383,7 +409,7 @@ class RootWindow(tk.Tk):
         self.destroy()
 
 
-class RootFrame(tk.Frame):
+class MainFrame(tk.Frame):
     # define the ctor method
     def __init__(self, master=None):
         # initialize the base class
