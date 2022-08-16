@@ -12,6 +12,7 @@ import time
 import os
 import logging
 import re
+import tkinter as tk
 from move import select
 
 LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
@@ -33,6 +34,65 @@ YELLOW = '#ffff00'
 # Establish words database
 cwd = os.getcwd()
 words_filename = f"{cwd}/database.csv"
+
+class SearchWindow(tk.Tk):
+    # define the ctor method
+    def __init__(self, mode=None, entry=None):
+        # initialize the base class
+        tk.Tk.__init__(self)
+        self.configure(bg=WHITE)
+
+        # add frame and canvas for future scrollable frame
+        self.root_frame = tk.Frame(self, bg=WHITE, bd=2)
+        self.root_frame.pack(fill="both", expand=True)
+        self.canvas = tk.Canvas(self.root_frame, bg=WHITE)
+        
+        # create scrollbars
+        self.scrollbar_y = tk.Scrollbar(self.root_frame, orient="vertical", command=self.canvas.yview)
+        self.scrollbar_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
+
+        # create main scrollable frame to hold all other frames
+        self.scrollable_frame = tk.Frame(self.canvas, bg=WHITE, bd=2)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
+
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
+        self.canvas.configure(yscrollcommand=self.scrollbar_y.set)
+        self.canvas.configure(xscrollcommand=self.scrollbar_x.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar_y.pack(side="right", fill="y")
+        self.scrollbar_x.pack(side="bottom", fill="x")
+
+        # fill window with poss words or poss clues
+        self.mode = mode
+        self.entry = entry
+        if self.mode == 'fill':
+            self.title(f"{len(entry.poss_words)} possible words for {self.entry.index} {self.entry.direc}")
+            btn_font = self.entry.master_window.wip_words.font
+            if len(self.entry.poss_words) > 1:
+                for w in self.entry.poss_words:
+                    btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=w, pady=10)
+                    btn['font'] = btn_font
+                    btn.pack(expand=True, fill="both")
+        elif self.mode == 'clue':
+            self.title(f"Possible Clues for {self.entry.index} {self.entry.direc}")
+
+        # quick quit
+        self.bind("<Escape>", lambda e: self.quit(e))
+
+        logger.debug(f"Created possible words search window for {self.entry.index} {self.entry.direc}")
+            
+
+    def quit(self, event):
+        self.destroy()
+
 
 def getPossWords(cellgrid):
     # reset poss words
@@ -73,12 +133,15 @@ def getPossWords(cellgrid):
     # color working word according to 
     # number of possible words
     color_hex = GREEN
+    mk_search_window = False
     if not cellgrid.wword.poss_words:
         color_hex = RED
-    elif 1 < len(cellgrid.wword.poss_words) <= 10:
-        color_hex = ORANGE
-    elif 1 < len(cellgrid.wword.poss_words) <= 50:
-        color_hex = YELLOW
+    elif len(cellgrid.wword.poss_words) > 1:
+        mk_search_window = True
+        if 1 < len(cellgrid.wword.poss_words) <= 10:
+            color_hex = ORANGE
+        elif 1 < len(cellgrid.wword.poss_words) <= 50:
+            color_hex = YELLOW
 
     for coord in cellgrid.wword.coords:
         cellgrid.cells[coord[0]][coord[1]].setColor(color_hex)
@@ -90,6 +153,12 @@ def getPossWords(cellgrid):
     logger.debug(f"Possible words for '{cellgrid.wword.word}':\n\t{cellgrid.wword.poss_words}\n")
     if len(cellgrid.wword.poss_words) > 50:
         logger.info(f"\tTotal possible words: {len(cellgrid.wword.poss_words)}\n")
+
+    # open window for possible words
+    if mk_search_window == True:
+        search_window = SearchWindow(mode='fill', entry=cellgrid.wword)
+        search_window.mainloop()
+
 
 def allPossWords(cellgrid):
     cellgrid.wword = None
