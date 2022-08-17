@@ -14,6 +14,7 @@ import logging
 import re
 import tkinter as tk
 from move import select
+#from indices import spreadIndices
 
 LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
 #LOGGER_LEVEL = logging.INFO
@@ -35,9 +36,48 @@ YELLOW = '#ffff00'
 cwd = os.getcwd()
 words_filename = f"{cwd}/database.csv"
 
+class PossWordBtn(tk.Button):
+    # define the ctor method
+    def __init__(self, master=None, text=None, entry=None):
+        # initialize the base class
+        tk.Button.__init__(self, master=master, relief=tk.GROOVE, bd=2, text=text,\
+                           command=self.onPossWordClick)
+        self.master_window = self.master.master.master.master
+        self.entry = entry
+        self.cellgrid = self.entry.cellgrid
+        self.word = text
+        self['font'] = self.entry.main_frame.wip_words.font
+        self.pack(expand=True, fill="both")
+
+    def onPossWordClick(self):
+        logger.debug(f"Selected word: {self.word}")
+        #self.entry.letters.clear()
+
+        for i in range(len(self.word)):
+            # set each letter to its coord in order
+            coord = self.entry.coords[i]
+            self.cellgrid.cells[coord[0]][coord[1]].letter.set(self.word[i])
+            ## add letter to entry list of letters
+            #self.entry.letters.append(self.word[i])
+
+        # update all entries for cases of intersecting words
+        for key,entry in self.cellgrid.words.items():
+            # clear letters
+            entry.letters.clear()
+            for coord in entry.coords:
+                cell = self.cellgrid.cells[coord[0]][coord[1]]
+                entry.letters.append(cell.letter.get())
+            entry.updateWord()
+            logger.debug(f"{key}:{repr(entry.letters)}, {entry.word}")
+        logger.debug("")
+        
+        # close pop-up window
+        self.master_window.destroy()
+
+
 class SearchWindow(tk.Tk):
     # define the ctor method
-    def __init__(self, mode=None, entry=None, poss_clues=None):
+    def __init__(self, mode=None, entry=None, poss_clues=None, database=words_filename):
         # initialize the base class
         tk.Tk.__init__(self)
         self.configure(bg=WHITE)
@@ -75,13 +115,9 @@ class SearchWindow(tk.Tk):
         self.entry = entry
         if self.mode == 'fill':
             self.title(f"{len(entry.poss_words)} possible words for {self.entry.index} {self.entry.direc}")
-            btn_font = self.entry.master_window.wip_words.font
             if len(self.entry.poss_words) > 1:
-                for w in self.entry.poss_words:
-                    btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=w)#, command=lambda : self.)
-                    btn['font'] = btn_font
-                    btn.pack(expand=True, fill="both")
-                    logger.debug(f"Created possible words search window for {self.entry.index} {self.entry.direc}")
+                for i in range(len(self.entry.poss_words)):
+                    pwb = PossWordBtn(self.scrollable_frame, text=self.entry.poss_words[i], entry=self.entry)
             else:
                 self.destroy()
 
@@ -89,17 +125,53 @@ class SearchWindow(tk.Tk):
             self.title(f"Possible Clues for {self.entry.index} {self.entry.direc}")
             txt_clue = tk.Text(self.scrollable_frame, height=3, width=50, wrap="word")
             txt_clue.grid(row=0, column=0, sticky="new")
-            btn_submit_clue = tk.Button(self.scrollable_frame, relief=tk.RAISED, bd=3, text="Save & Use Clue")#, command=lambda : self.)
+            btn_submit_clue = tk.Button(self.scrollable_frame, relief=tk.RAISED, bd=3, text="Save & Use Clue")#, 
+                                        #command=lambda : self.addNewClue(clue=txt_clue.get("1.0", tk.END)))
             btn_submit_clue.grid(row=1, column=0, pady=10, sticky="n")
             counter = 0
             for c in poss_clues:
-                btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=c)#, command=lambda : self.)
+                btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=c)#, 
+                                #command=lambda : self.onPossClueClick(c))
                 btn.grid(row=counter+2, column=0, pady=2, sticky="w")
                 counter += 1
             logger.debug(f"Created possible clues search window for {self.entry.index} {self.entry.direc}")
 
+        # establish database for use in methods
+        self.database = database
+
         # quick quit
         self.bind("<Escape>", lambda e: self.quit(e))
+
+    def onPossWordClick(self, word):
+        # clear out entry letters
+        self.entry.letters.clear()
+
+        for i in range(len(word)):
+            logger.debug(f"Selected word: {word}")
+            # set each letter to its coord in order
+            coord = self.entry.coords[i]
+            self.entry.cellgrid.cells[coord[0]][coord[1]].letter.set(word[i])
+            # add letter to entry list of letters
+            self.entry.letters.append(word[i])
+
+        # update all entries for cases of intersecting words
+        for entry_key in self.entry.cellgrid.words:
+            self.entry.cellgrid.words[entry_key].updateWord()
+            logger.debug(f"{entry_key}:{repr(self.entry.cellgrid.words[entry_key].letters)}, \
+                           {self.entry.cellgrid.words[entry_key].word}")
+        logger.debug("")
+        
+        # close pop-up window
+        self.destroy()
+
+
+    #def onPossClueClick(self, clue):
+        
+
+
+    #def addNewClue(self, clue=None):
+        
+
 
 
     def quit(self, event):

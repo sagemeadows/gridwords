@@ -25,7 +25,8 @@ BLACK = '#000000'
 
 class Entry:
     def __init__(self, cellgrid, index, direction, row):
-        self.master_window = cellgrid.master
+        self.cellgrid = cellgrid
+        self.main_frame = self.cellgrid.master
         self.index = index
         self.direc = direction
         self.row = row
@@ -38,15 +39,15 @@ class Entry:
         self.poss_words = []
 
         # put entry in cellgrid words dict
-        self.master_window.cellgrid.words[f'{self.index} {self.direc}'] = self
+        self.cellgrid.words[f'{self.index} {self.direc}'] = self
         
         # create entry frame & button
-        exec(f"self.frm = tk.Frame(self.master_window.wip_words.wip_{self.direc}, relief=tk.FLAT, bd=2, bg=WHITE)")
+        exec(f"self.frm = tk.Frame(self.main_frame.wip_words.wip_{self.direc}, relief=tk.FLAT, bd=2, bg=WHITE)")
         self.lbl = tk.Label(self.frm, text=f'{self.index}. ', bd=2, bg=WHITE)
         self.lbl.grid(row=0, column=0)
         self.btn_text = tk.StringVar()
         self.btn = tk.Button(self.frm, bd=2, textvariable=self.btn_text, command=self.onEntryButtonClick)
-        self.btn_font = self.master_window.wip_words.font
+        self.btn_font = self.main_frame.wip_words.font
         self.btn['font'] = self.btn_font
         self.btn.grid(row=0, column=1)
         self.frm.grid(row=self.row, column=0, sticky="nw")
@@ -58,14 +59,13 @@ class Entry:
         #logger.debug(f"Updated {self.index} {self.direc}")
 
     def onEntryButtonClick(self):
-        cellgrid = self.master_window.cellgrid
-        if cellgrid.mode != 'grid':
-            cellgrid.wdirec = self.direc
-            cell = cellgrid.cells[self.coords[0][0]][self.coords[0][1]]
-            select(cell, cellgrid)
-        if cellgrid.mode == 'fill':
-            getPossWords(cellgrid)
-        elif cellgrid.mode == 'clue':
+        if self.cellgrid.mode != 'grid':
+            self.cellgrid.wdirec = self.direc
+            cell = self.cellgrid.cells[self.coords[0][0]][self.coords[0][1]]
+            select(cell, self.cellgrid)
+        if self.cellgrid.mode == 'fill':
+            getPossWords(self.cellgrid)
+        elif self.cellgrid.mode == 'clue':
             getPossClues(self)
 
 def updateClueIndices(cellgrid):
