@@ -91,7 +91,7 @@ class PossClueBtn(tk.Button):
     def onPossClueClick(self):
         logger.debug(f"Selected clue: {self.clue}")
         self.entry.clue.set(self.clue)
-        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue}\n")
+        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue.get()}\n")
         
         # close pop-up window
         self.master_window.destroy()
@@ -146,8 +146,8 @@ class SearchWindow(tk.Tk):
             self.title(f"Possible Clues for {self.entry.index} {self.entry.direc}")
             txt_clue = tk.Text(self.scrollable_frame, height=3, width=50, wrap="word")
             txt_clue.grid(row=0, column=0, sticky="new")
-            btn_submit_clue = tk.Button(self.scrollable_frame, relief=tk.RAISED, bd=3, text="Save & Use Clue")#, 
-                                        #command=lambda : self.addNewClue(clue=txt_clue.get("1.0", tk.END)))
+            btn_submit_clue = tk.Button(self.scrollable_frame, relief=tk.RAISED, bd=3, text="Save & Use Clue", \
+                                        command=lambda : self.addNewClue(clue=txt_clue.get("1.0", tk.END)))
             btn_submit_clue.grid(row=1, column=0, pady=10, sticky="n")
             counter = 2
             for c in poss_clues:
@@ -162,9 +162,20 @@ class SearchWindow(tk.Tk):
         self.bind("<Escape>", lambda e: self.quit(e))
 
 
-    #def addNewClue(self, clue=None):
-        
+    def addNewClue(self, clue=None):
+        """Save new clue to database."""
+        with open(words_filename, mode="w", encoding="utf-8") as f:
+            line = str(len(self.entry.word)) + ',' + self.entry.word + ',' + clue
+            f.write(line)
+        if f.closed:
+            logger.debug(f"Database {words_filename} saved and closed")
 
+        # use clue in puzzle
+        self.entry.clue.set(clue)
+        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue}\n")
+        
+        # close pop-up window
+        self.master_window.destroy()
 
 
     def quit(self, event):
