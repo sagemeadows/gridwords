@@ -74,6 +74,27 @@ class PossWordBtn(tk.Button):
         # close pop-up window
         self.master_window.destroy()
 
+class PossClueBtn(tk.Button):
+    # define the ctor method
+    def __init__(self, master=None, text=None, entry=None, row=None):
+        # initialize the base class
+        tk.Button.__init__(self, master=master, relief=tk.GROOVE, bd=2, text=text,\
+                           command=self.onPossClueClick)
+        self.master_window = self.master.master.master.master
+        self.entry = entry
+        self.cellgrid = self.entry.cellgrid
+        self.clue = text
+        #self['font'] = self.entry.main_frame.wip_words.font
+        self.row = row
+        self.grid(row=self.row, column=0, pady=2, sticky="w")
+
+    def onPossClueClick(self):
+        logger.debug(f"Selected clue: {self.clue}")
+        self.entry.clue.set(self.clue)
+        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue}\n")
+        
+        # close pop-up window
+        self.master_window.destroy()
 
 class SearchWindow(tk.Tk):
     # define the ctor method
@@ -128,11 +149,9 @@ class SearchWindow(tk.Tk):
             btn_submit_clue = tk.Button(self.scrollable_frame, relief=tk.RAISED, bd=3, text="Save & Use Clue")#, 
                                         #command=lambda : self.addNewClue(clue=txt_clue.get("1.0", tk.END)))
             btn_submit_clue.grid(row=1, column=0, pady=10, sticky="n")
-            counter = 0
+            counter = 2
             for c in poss_clues:
-                btn = tk.Button(self.scrollable_frame, relief=tk.GROOVE, bd=2, text=c)#, 
-                                #command=lambda : self.onPossClueClick(c))
-                btn.grid(row=counter+2, column=0, pady=2, sticky="w")
+                pcb = PossClueBtn(self.scrollable_frame, text=c, entry=self.entry, row=counter)
                 counter += 1
             logger.debug(f"Created possible clues search window for {self.entry.index} {self.entry.direc}")
 
@@ -141,32 +160,6 @@ class SearchWindow(tk.Tk):
 
         # quick quit
         self.bind("<Escape>", lambda e: self.quit(e))
-
-    def onPossWordClick(self, word):
-        # clear out entry letters
-        self.entry.letters.clear()
-
-        for i in range(len(word)):
-            logger.debug(f"Selected word: {word}")
-            # set each letter to its coord in order
-            coord = self.entry.coords[i]
-            self.entry.cellgrid.cells[coord[0]][coord[1]].letter.set(word[i])
-            # add letter to entry list of letters
-            self.entry.letters.append(word[i])
-
-        # update all entries for cases of intersecting words
-        for entry_key in self.entry.cellgrid.words:
-            self.entry.cellgrid.words[entry_key].updateWord()
-            logger.debug(f"{entry_key}:{repr(self.entry.cellgrid.words[entry_key].letters)}, \
-                           {self.entry.cellgrid.words[entry_key].word}")
-        logger.debug("")
-        
-        # close pop-up window
-        self.destroy()
-
-
-    #def onPossClueClick(self, clue):
-        
 
 
     #def addNewClue(self, clue=None):

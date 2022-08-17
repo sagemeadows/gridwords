@@ -35,22 +35,32 @@ class Entry:
         self.coords = []
         self.letters = []
         self.word = ''
-        self.clue = ''
+        self.clue = tk.StringVar()
         self.poss_words = []
 
         # put entry in cellgrid words dict
         self.cellgrid.words[f'{self.index} {self.direc}'] = self
         
-        # create entry frame & button
+        # create entry frame
         exec(f"self.frm = tk.Frame(self.main_frame.wip_words.wip_{self.direc}, relief=tk.FLAT, bd=2, bg=WHITE)")
+        self.frm.grid(row=self.row, column=0, sticky="nw")
+
+        # create index label
         self.lbl = tk.Label(self.frm, text=f'{self.index}. ', bd=2, bg=WHITE)
         self.lbl.grid(row=0, column=0)
+
+        # create word button
         self.btn_text = tk.StringVar()
         self.btn = tk.Button(self.frm, bd=2, textvariable=self.btn_text, command=self.onEntryButtonClick)
         self.btn_font = self.main_frame.wip_words.font
         self.btn['font'] = self.btn_font
-        self.btn.grid(row=0, column=1)
-        self.frm.grid(row=self.row, column=0, sticky="nw")
+        self.btn.grid(row=0, column=1, sticky="nw")
+
+        # create clue label
+        #self.clue_text = tk.StringVar()
+        self.clue_lbl = tk.Label(self.frm, textvariable=self.clue, bd=2, bg=WHITE)
+        self.clue_lbl.grid(row=1, column=1, sticky="nw")
+
 
     def updateWord(self):
         self.word = ''
