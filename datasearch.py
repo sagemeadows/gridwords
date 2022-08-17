@@ -164,11 +164,9 @@ class SearchWindow(tk.Tk):
 
     def addNewClue(self, clue=None):
         """Save new clue to database."""
-        with open(words_filename, mode="w", encoding="utf-8") as f:
+        with open(words_filename, 'a', encoding="utf-8") as f:
             line = str(len(self.entry.word)) + ',' + self.entry.word + ',' + clue
             f.write(line)
-        if f.closed:
-            logger.debug(f"Database {words_filename} saved and closed")
 
         # use clue in puzzle
         self.entry.clue.set(clue)
