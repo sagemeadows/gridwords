@@ -24,10 +24,11 @@ BLACK = '#000000'
 
 
 class Entry:
-    def __init__(self, cellgrid, index, direction):
+    def __init__(self, cellgrid, index, direction, row):
         self.master_window = cellgrid.master
         self.index = index
         self.direc = direction
+        self.row = row
 
         self.length = 0
         self.coords = []
@@ -48,7 +49,7 @@ class Entry:
         self.btn_font = self.master_window.wip_words.font
         self.btn['font'] = self.btn_font
         self.btn.grid(row=0, column=1)
-        self.frm.pack()
+        self.frm.grid(row=self.row, column=0, sticky="nw")
 
     def updateWord(self):
         self.word = ''
@@ -68,8 +69,14 @@ class Entry:
             getPossClues(self)
 
 def updateClueIndices(cellgrid):
-    # (re)start counter
+    # (re)start counter to get entry indexes
     counter = 0
+
+    # count number of across and down words
+    # for use in gridding entries in wip words frame
+    row_across = 0
+    row_down = 0
+
     # clear any old cellgrid info
     cellgrid.words = {}
     cellgrid.wl = (-1, -1)
@@ -199,16 +206,18 @@ def updateClueIndices(cellgrid):
                 # if cell is the start of a horizontal word
                 if word_across:
                     cell.across_num = counter
+                    row_across += 1
 
                     # create across entry and add to words dict
-                    entry = Entry(cellgrid, counter, 'across')
+                    entry = Entry(cellgrid, counter, 'across', row_across)
 
                 # if cell is the start of a vertical word
                 if word_down:
                     cell.down_num = counter
+                    row_down += 1
 
                     # create down entry and add to words dict
-                    entry = Entry(cellgrid, counter, 'down')
+                    entry = Entry(cellgrid, counter, 'down', row_down)
 
             else: # cell is black
                 cell.setClueIndex(-1)

@@ -344,15 +344,15 @@ class WIPwordsFrame(tk.Frame):
 
         # create across and down word frames
         self.wip_across = tk.Frame(self, relief=tk.FLAT, bd=2, bg=WHITE)
-        self.wip_across.grid(row=0, column=0)
+        self.wip_across.grid(row=0, column=0, sticky="nw")
         self.wip_down = tk.Frame(self, relief=tk.FLAT, bd=2, bg=WHITE)
-        self.wip_down.grid(row=0, column=1)
+        self.wip_down.grid(row=0, column=1, sticky="nw")
         
         # create labels
         self.lbl_across = tk.Label(self.wip_across, text="ACROSS", bg=WHITE, bd=2)
-        self.lbl_across.pack(side="top")
+        self.lbl_across.grid(row=0, column=0, columnspan=2, sticky="nw")
         self.lbl_down = tk.Label(self.wip_down, text="DOWN", bg=WHITE, bd=2)
-        self.lbl_down.pack(side="top")
+        self.lbl_down.grid(row=0, column=0, columnspan=2, sticky="nw")
 
         logger.debug("New WIP Words")
 
