@@ -36,66 +36,6 @@ YELLOW = '#ffff00'
 cwd = os.getcwd()
 words_filename = f"{cwd}/database.csv"
 
-class PossWordBtn(tk.Button):
-    # define the ctor method
-    def __init__(self, master=None, text=None, entry=None):
-        # initialize the base class
-        tk.Button.__init__(self, master=master, relief=tk.GROOVE, bd=2, text=text,\
-                           command=self.onPossWordClick)
-        self.master_window = self.master.master.master.master
-        self.entry = entry
-        self.cellgrid = self.entry.cellgrid
-        self.word = text
-        self['font'] = self.entry.main_frame.wip_words.font
-        self.pack(expand=True, fill="both")
-
-    def onPossWordClick(self):
-        logger.debug(f"Selected word: {self.word}")
-        #self.entry.letters.clear()
-
-        for i in range(len(self.word)):
-            # set each letter to its coord in order
-            coord = self.entry.coords[i]
-            self.cellgrid.cells[coord[0]][coord[1]].letter.set(self.word[i])
-            ## add letter to entry list of letters
-            #self.entry.letters.append(self.word[i])
-
-        # update all entries for cases of intersecting words
-        for key,entry in self.cellgrid.words.items():
-            # clear letters
-            entry.letters.clear()
-            for coord in entry.coords:
-                cell = self.cellgrid.cells[coord[0]][coord[1]]
-                entry.letters.append(cell.letter.get())
-            entry.updateWord()
-            logger.debug(f"{key}:{repr(entry.letters)}, {entry.word}")
-        logger.debug("")
-        
-        # close pop-up window
-        self.master_window.destroy()
-
-class PossClueBtn(tk.Button):
-    # define the ctor method
-    def __init__(self, master=None, text=None, entry=None, row=None):
-        # initialize the base class
-        tk.Button.__init__(self, master=master, relief=tk.GROOVE, bd=2, text=text,\
-                           command=self.onPossClueClick)
-        self.master_window = self.master.master.master.master
-        self.entry = entry
-        self.cellgrid = self.entry.cellgrid
-        self.clue = text
-        #self['font'] = self.entry.main_frame.wip_words.font
-        self.row = row
-        self.grid(row=self.row, column=0, pady=2, sticky="w")
-
-    def onPossClueClick(self):
-        #logger.debug(f"Selected clue: {self.clue}")
-        self.entry.clue.set(self.clue)
-        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue.get()}\n")
-        
-        # close pop-up window
-        self.master_window.destroy()
-
 class SearchWindow(tk.Tk):
     # define the ctor method
     def __init__(self, mode=None, entry=None, poss_clues=None, database=words_filename):
@@ -178,6 +118,68 @@ class SearchWindow(tk.Tk):
 
     def quit(self, event):
         self.destroy()
+
+
+class PossWordBtn(tk.Button):
+    # define the ctor method
+    def __init__(self, master=None, text=None, entry=None):
+        # initialize the base class
+        tk.Button.__init__(self, master=master, relief=tk.GROOVE, bd=2, text=text,\
+                           command=self.onPossWordClick)
+        self.master_window = self.master.master.master.master
+        self.entry = entry
+        self.cellgrid = self.entry.cellgrid
+        self.word = text
+        self['font'] = self.entry.main_frame.wip_words.font
+        self.pack(expand=True, fill="both")
+
+    def onPossWordClick(self):
+        logger.debug(f"Selected word: {self.word}")
+        #self.entry.letters.clear()
+
+        for i in range(len(self.word)):
+            # set each letter to its coord in order
+            coord = self.entry.coords[i]
+            self.cellgrid.cells[coord[0]][coord[1]].letter.set(self.word[i])
+            ## add letter to entry list of letters
+            #self.entry.letters.append(self.word[i])
+
+        # update all entries for cases of intersecting words
+        for key,entry in self.cellgrid.words.items():
+            # clear letters
+            entry.letters.clear()
+            for coord in entry.coords:
+                cell = self.cellgrid.cells[coord[0]][coord[1]]
+                entry.letters.append(cell.letter.get())
+            entry.updateWord()
+            logger.debug(f"{key}:{repr(entry.letters)}, {entry.word}")
+        logger.debug("")
+        
+        # close pop-up window
+        self.master_window.destroy()
+
+
+class PossClueBtn(tk.Button):
+    # define the ctor method
+    def __init__(self, master=None, text=None, entry=None, row=None):
+        # initialize the base class
+        tk.Button.__init__(self, master=master, relief=tk.GROOVE, bd=2, text=text,\
+                           command=self.onPossClueClick)
+        self.master_window = self.master.master.master.master
+        self.entry = entry
+        self.cellgrid = self.entry.cellgrid
+        self.clue = text
+        #self['font'] = self.entry.main_frame.wip_words.font
+        self.row = row
+        self.grid(row=self.row, column=0, pady=2, sticky="w")
+
+    def onPossClueClick(self):
+        #logger.debug(f"Selected clue: {self.clue}")
+        self.entry.clue.set(self.clue)
+        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue.get()}\n")
+        
+        # close pop-up window
+        self.master_window.destroy()
 
 
 def getPossWords(cellgrid):

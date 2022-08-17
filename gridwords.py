@@ -287,18 +287,22 @@ class TopBar(tk.Frame):
         tk.Frame.__init__(self, master, bg=WHITE, bd=2)
 
         # create mode buttons
-        self.grid_btn = tk.Button(self, text="Edit Grid", bg=GRAY1, command=lambda : self.gridMode(self.master.cellgrid))
-        self.fill_btn = tk.Button(self, text="Fill Words", bg=GRAY2, command=lambda : self.fillMode(self.master.cellgrid))
-        self.clue_btn = tk.Button(self, text="Find Clues", bg=GRAY2, command=lambda : self.clueMode(self.master.cellgrid))
+        self.grid_btn = tk.Button(self, text="Edit Grid", bg=CYAN, activebackground=CYAN,\
+                                        command=lambda : self.gridMode(self.master.cellgrid))
+        self.fill_btn = tk.Button(self, text="Fill Words", bg=GRAY2, activebackground=CYAN,\
+                                        command=lambda : self.fillMode(self.master.cellgrid))
+        self.clue_btn = tk.Button(self, text="Find Clues", bg=GRAY2, activebackground=CYAN,\
+                                        command=lambda : self.clueMode(self.master.cellgrid))
         self.grid_btn.grid(row=0, column=0)
         self.fill_btn.grid(row=0, column=1, padx=10, pady=10)
         self.clue_btn.grid(row=0, column=2)
 
-        self.search_btn = tk.Button(self, text="Poss Words", bg=GRAY2, command=lambda : allPossWords(self.master.cellgrid))
+        self.search_btn = tk.Button(self, text="Poss Words", bg=GRAY2, activebackground=CYAN,\
+                                          command=lambda : allPossWords(self.master.cellgrid))
 
     def gridMode(self, cellgrid):
         cellgrid.mode = 'grid'
-        self.grid_btn['background'] = GRAY1
+        self.grid_btn['background'] = CYAN
         self.fill_btn['background'] = GRAY2
         self.clue_btn['background'] = GRAY2
         self.search_btn.grid_forget()
@@ -307,7 +311,7 @@ class TopBar(tk.Frame):
     def fillMode(self, cellgrid):
         cellgrid.mode = 'fill'
         self.grid_btn['background'] = GRAY2
-        self.fill_btn['background'] = GRAY1
+        self.fill_btn['background'] = CYAN
         self.clue_btn['background'] = GRAY2
         self.search_btn.grid(row=1, column=1, pady=10)
 
@@ -315,7 +319,7 @@ class TopBar(tk.Frame):
         cellgrid.mode = 'clue'
         self.grid_btn['background'] = GRAY2
         self.fill_btn['background'] = GRAY2
-        self.clue_btn['background'] = GRAY1
+        self.clue_btn['background'] = CYAN
         self.search_btn.grid_forget()
         #self.reset(cellgrid)
         #allPossWords(cellgrid)
@@ -349,9 +353,9 @@ class WIPwordsFrame(tk.Frame):
         self.wip_down.grid(row=0, column=1, sticky="nw")
         
         # create labels
-        self.lbl_across = tk.Label(self.wip_across, text="ACROSS", bg=WHITE, bd=2)
+        self.lbl_across = tk.Label(self.wip_across, text="ACROSS", pady=7, bg=WHITE, bd=2)
         self.lbl_across.grid(row=0, column=0, columnspan=2, sticky="nw")
-        self.lbl_down = tk.Label(self.wip_down, text="DOWN", bg=WHITE, bd=2)
+        self.lbl_down = tk.Label(self.wip_down, text="DOWN", pady=7, bg=WHITE, bd=2)
         self.lbl_down.grid(row=0, column=0, columnspan=2, sticky="nw")
 
         logger.debug("New WIP Words")
@@ -368,16 +372,6 @@ class RootWindow(tk.Tk):
         #self.width= self.winfo_screenwidth()
         #self.height= self.winfo_screenheight()
         #self.maxsize(self.width, self.height)
-
-        ## create a horizontal scrollbar for window
-        #h = tk.Scrollbar(self, orient = 'horizontal')
-        ## attach Scrollbar to root window at the bootom
-        #h.pack(side='bottom', fill='x')
-
-        ## create a vertical scrollbar for window
-        #v = tk.Scrollbar(self)
-        ## attach Scrollbar to root window on right side
-        #v.pack(side='right', fill='y')
 
         # add frame and canvas for future scrollable frame
         self.root_frame = tk.Frame(self, bg=WHITE, bd=0)
@@ -454,10 +448,10 @@ class MainFrame(tk.Frame):
         self.cellgrid.grid(row=1, column=1)
 
         self.topbar = TopBar(self)
-        self.topbar.grid(row=0, column=1)
+        self.topbar.grid(row=0, column=1)#, sticky="nw")
 
         self.wip_words = WIPwordsFrame(self)
-        self.wip_words.grid(row=2, column=1)
+        self.wip_words.grid(row=2, column=1)#, sticky="nw")
 
         updateClueIndices(self.cellgrid)
         spreadIndices(self.cellgrid)

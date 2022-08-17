@@ -51,14 +51,14 @@ class Entry:
 
         # create word button
         self.btn_text = tk.StringVar()
-        self.btn = tk.Button(self.frm, bd=2, textvariable=self.btn_text, command=self.onEntryButtonClick)
+        self.btn = tk.Button(self.frm, bd=2, relief=tk.FLAT, textvariable=self.btn_text, command=self.onEntryButtonClick)
         self.btn_font = self.main_frame.wip_words.font
         self.btn['font'] = self.btn_font
         self.btn.grid(row=0, column=1, sticky="nw")
 
         # create clue label
         #self.clue_text = tk.StringVar()
-        self.clue_lbl = tk.Label(self.frm, textvariable=self.clue, bd=2, bg=WHITE)
+        self.clue_lbl = tk.Label(self.frm, textvariable=self.clue, justify="left", bd=2, bg=WHITE)
         self.clue_lbl.grid(row=1, column=1, sticky="nw")
 
 
