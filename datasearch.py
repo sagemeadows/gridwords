@@ -89,7 +89,7 @@ class PossClueBtn(tk.Button):
         self.grid(row=self.row, column=0, pady=2, sticky="w")
 
     def onPossClueClick(self):
-        logger.debug(f"Selected clue: {self.clue}")
+        #logger.debug(f"Selected clue: {self.clue}")
         self.entry.clue.set(self.clue)
         logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue.get()}\n")
         
@@ -172,10 +172,10 @@ class SearchWindow(tk.Tk):
 
         # use clue in puzzle
         self.entry.clue.set(clue)
-        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue}\n")
+        logger.debug(f"{self.entry.index} {self.entry.direc}: {self.entry.word}, {self.entry.clue.get()}\n")
         
         # close pop-up window
-        self.master_window.destroy()
+        self.destroy()
 
 
     def quit(self, event):
