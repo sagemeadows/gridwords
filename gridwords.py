@@ -232,19 +232,16 @@ class CellGrid(tk.Frame):
 
     def setCellLetter(self, key):
         working_cell = self.cells[self.wl[0]][self.wl[1]]
-        #self.cells[self.wl[0]][self.wl[1]].letter.set(key)
         working_cell.letter.set(key)
         # edit words dict
         if working_cell.across_num > 0:
             a_index = f'{working_cell.across_num} across'
             self.words[a_index].letters[working_cell.across_pos] = key
             self.words[a_index].updateWord()
-            #self.words[str(working_cell.across_num)][0][1][working_cell.across_pos] = key
         if working_cell.down_num > 0:
             d_index = f'{working_cell.down_num} down'
             self.words[d_index].letters[working_cell.down_pos] = key
             self.words[d_index].updateWord()
-            #self.words[str(working_cell.down_num)][0][1][working_cell.down_pos] = key
 
         for key,entry in self.words.items():
             logger.debug(f"{key}: {entry.word}")
@@ -255,7 +252,6 @@ class SideBar(tk.Frame):
     def __init__(self, master=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=WHITE, bd=20)
-        #self.grid(row=1, column=0)
 
         # create things to go in sidebar
         lbl_rows = tk.Label(self, text="Number of rows:", bg=WHITE)
