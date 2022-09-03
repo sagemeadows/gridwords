@@ -16,7 +16,7 @@ import tkinter as tk
 import tkinter.font as tkf
 
 # Import functions from local modules
-from handle_files import open_file, save_file
+from handle_files import SaveWindow, open_file, save_file
 from indices import Entry, updateClueIndices, spreadIndices
 from move import moveUp, moveDown, moveLeft, moveRight, select, highlight
 from datasearch import getPossWords, allPossWords, getPossClues
@@ -169,6 +169,11 @@ class CellGrid(tk.Frame):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
 
+        # puzzle info
+        self.title = "Untitled Puzzle"
+        self.author = ""
+        self.descrip = ""
+
         # set mode
         self.mode = 'grid'
 
@@ -254,27 +259,30 @@ class SideBar(tk.Frame):
         tk.Frame.__init__(self, master, bg=WHITE, bd=20)
 
         # create things to go in sidebar
-        lbl_rows = tk.Label(self, text="Number of rows:", bg=WHITE)
-        lbl_rows.grid(row=0, column=0)
-        ent_rows = tk.Entry(self, width=3, highlightcolor=YELLOW)
-        ent_rows.grid(row=0, column=1)
+        self.lbl_rows = tk.Label(self, text="Number of rows:", bg=WHITE)
+        self.lbl_rows.grid(row=0, column=0)
+        self.ent_rows = tk.Entry(self, width=3, highlightcolor=YELLOW)
+        self.ent_rows.grid(row=0, column=1)
 
-        lbl_columns = tk.Label(self, text="Number of columns:", bg=WHITE)
-        lbl_columns.grid(row=1, column=0)
-        ent_columns = tk.Entry(self, width=3, highlightcolor=YELLOW)
-        ent_columns.grid(row=1, column=1)
+        self.lbl_columns = tk.Label(self, text="Number of columns:", bg=WHITE)
+        self.lbl_columns.grid(row=1, column=0)
+        self.ent_columns = tk.Entry(self, width=3, highlightcolor=YELLOW)
+        self.ent_columns.grid(row=1, column=1)
 
-        btn_mk_grid = tk.Button(self, text="Create Grid", command=lambda : self.master.createGrid(ent_rows, ent_columns))
-        btn_mk_grid.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+        self.btn_mk_grid = tk.Button(self, text="Create Grid", command=lambda : self.master.createGrid(rows=None, columns=None))
+        self.btn_mk_grid.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
 
-        # TODO: Figure out how to open a crossword puzzle file
-        #btn_open = tk.Button(sidebar, text="Open", command=open_file)
-        #btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+        ## TODO: Figure out how to open a crossword puzzle file
+        #self.btn_open = tk.Button(self, text="Open", command=open_file)
+        #self.btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
 
-        # TODO: Figure out how to save a crossword puzzle file
-        #btn_save = tk.Button(sidebar, text="Save As...", command=save_file)
-        #btn_save.grid(row=4, column=0, columnspan=2, padx=5)
+        # save crossword puzzle
+        self.btn_save = tk.Button(self, text="Save As...", command=self.openSaveWindow)
+        self.btn_save.grid(row=4, column=0, columnspan=2, padx=5)
 
+    def openSaveWindow(self):
+        save_window = SaveWindow(main_frame=self.master)
+        save_window.mainloop()
 
 class TopBar(tk.Frame):
     # define the ctor method
@@ -433,15 +441,16 @@ class MainFrame(tk.Frame):
         self.deletable = ["cellgrid", "topbar", "wip_words"]
 
 
-    def createGrid(self, ent_rows, ent_columns):
+    def createGrid(self, rows=None, columns=None):
         for frame in self.deletable:
             exec(f"if self.{frame}: self.{frame}.destroy()")
 
-        self.ROWS = int(ent_rows.get())
-        self.COLUMNS = int(ent_columns.get())
+        self.ROWS = int(self.sidebar.ent_rows.get())
+        self.COLUMNS = int(self.sidebar.ent_columns.get())
 
         self.cellgrid = CellGrid(self)
         self.cellgrid.grid(row=1, column=1)
+        self.master.master.master.title(f'{self.cellgrid.title} - Gridwords')
 
         self.topbar = TopBar(self)
         self.topbar.grid(row=0, column=1)#, sticky="nw")

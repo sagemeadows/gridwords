@@ -104,6 +104,7 @@ class SearchWindow(tk.Tk):
 
     def addNewClue(self, clue=None):
         """Save new clue to database."""
+        clue = clue.rstrip('\n')
         with open(words_filename, 'a', encoding="utf-8") as f:
             line = str(len(self.entry.word)) + ',' + self.entry.word + ',' + clue
             f.write(line)
