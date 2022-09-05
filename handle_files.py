@@ -8,15 +8,23 @@
 # Open, save, and export files (WIP).
 #
 
+import logging
 import sys
 import os
 import re
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 
+LOGGER_FORMAT = "%(filename)s:%(lineno)s %(funcName)s: %(message)s"
+#LOGGER_LEVEL = logging.INFO
+LOGGER_LEVEL = logging.DEBUG
+logging.basicConfig( format=LOGGER_FORMAT, level=LOGGER_LEVEL)
+logger = logging.getLogger(__name__)
+
 WHITE = '#ffffff'
 BLACK = '#000000'
 
+# HTML file head templates
 html1 = """
 <html>
 <head>
@@ -70,6 +78,7 @@ letter {
 <body>
 """
 
+# Pop-up window for puzzle info
 class SaveWindow(tk.Tk):
     # define the ctor method
     def __init__(self, main_frame=None):
@@ -163,6 +172,7 @@ class SaveWindow(tk.Tk):
         self.destroy()
 
 
+# Parse .txt files
 def open_file(main_frame):
     """Open a puzzle for editing."""
     filepath = askopenfilename(
@@ -176,6 +186,8 @@ def open_file(main_frame):
     window.title(f"Simple Text Editor - {filepath}")
 
 
+# Convert puzzle to reloadable .txt file
+# or to printable .html file
 def save_file(main_frame):#, rows, columns, title=main_frame.cellgrid., author="Unknown", descrip=None):
     """Save current puzzle as a new file."""
     filepath = asksaveasfilename(
@@ -305,6 +317,6 @@ def save_file(main_frame):#, rows, columns, title=main_frame.cellgrid., author="
             output_file.write('</body>\n')
             output_file.write('</html>\n')
 
-    print(f"Saved puzzle to {filepath}")
+    logger.debug(f"Saved puzzle to {filepath}")
     main_frame.master.master.master.title(f'{title} - Gridwords')
 

@@ -22,7 +22,7 @@ Gridwords is a custom crossword puzzle maker that lets you design crossword puzz
 
 ### Saving Files
 #### TEXT
-**.txt** files are (or, rather, *will be*) for saving your WIP puzzle progress and for opening a puzzle in gridwords.
+**.txt** files are (or, rather, *will be*) for saving your WIP puzzle progress and for opening a puzzle in gridwords. Black spaces are maked with `#`, unfilled white spaces with `.`
 
 ```<GRIDWORDS PUZZLE>
 <TITLE>
@@ -34,10 +34,10 @@ Gridwords is a custom crossword puzzle maker that lets you design crossword puzz
 <SIZE>
   4x4
 <GRID>
-  BAT.
+  BAT#
   OVER
   YOLO
-  .WET
+  #WET
 <CLUES>
   1 across,Animal hiding in abattoir
   1 down,Not yet a man
@@ -52,6 +52,8 @@ This .txt file layout is adapted from the example given [here](https://www.litso
 
 #### HTML
 **.html** files are for creating a version of the puzzle that can be converted to a printable PDF. The easiest way to do this is to open the .html file in a browser that lets you turn pages into PDFs (e.g. Chrome) and save a PDF version there.
+
+If the black spaces don't show up on the PDF, check 'More Options' to see if there's a 'Show Backgrounds' option and make sure to check the box.
 
 ```<!DOCTYPE html>
 

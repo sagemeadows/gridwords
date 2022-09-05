@@ -109,14 +109,17 @@ class Cell(tk.Frame):
         self.clue_index.set(str(index))
 
     def onClick(self, args=None):
-        logger.debug(f"Clicked Cell: ({self.row}, {self.column})")
+        logger.debug(f"Clicked Cell: ({self.row}, {self.column}; '{self.letter.get()}')")
         color_hex = self.button['background']
         if self.master.mode == 'grid':
             #color_hex = self.button['background']
             if color_hex == WHITE:
                 color_hex = BLACK
+                self.letter.set('#')
             else:
                 color_hex = WHITE
+                self.letter.set('.')
+            logger.debug(f"Clicked Cell New Letter: '{self.letter.get()}'")
             self.setColor(color_hex)
 
             # tell the grid to make the symmetric counterpart cell agree

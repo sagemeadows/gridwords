@@ -235,8 +235,8 @@ def updateClueIndices(cellgrid):
                 cell.across_num = -1
                 cell.down_num = -1
 
-                # clear any old letter to '.'
-                cell.letter.set('.')
+                # clear any old letter to '#'
+                cell.letter.set('#')
 
 
 def spreadIndices(cellgrid):
