@@ -1,5 +1,5 @@
 # gridwords
-Gridwords is a custom crossword puzzle maker that lets you design crossword puzzle grids and put words into the grid, and shows you if no words will fit in any slots.
+Gridwords is a custom crossword puzzle maker that lets you design crossword puzzle grids, put words into the grid, and select clues for the words. You can also add new words and new clues to the database, save your progress, and create printable versions of your puzzle.
 
 ## Download
 `git clone https://github.com/sagemeadows/gridwords` or click on the green 'Code' button in the upper right corner and download ZIP
@@ -11,7 +11,7 @@ Gridwords is a custom crossword puzzle maker that lets you design crossword puzz
   - Click on a box to select it, press a letter to fill it in
   - Use arrow keys to move the selected box
   - Press `Shift` of scroll over a box to change the direction of the selected word
-  - Right click on a box to see the number of possible words that can fill the selected word
+  - Right click on a box to see the number of possible words in the database that can fill the selected word
 - In **Clue-Filling Mode**:
   - Click on a box to select it
   - Use arrow keys to move the selected box
@@ -22,7 +22,35 @@ Gridwords is a custom crossword puzzle maker that lets you design crossword puzz
 
 ### Saving Files
 #### TEXT
-**.txt** files are (or, rather, *will be*) for saving your WIP puzzle progress and for opening a puzzle in gridwords. Black spaces are maked with `#`, unfilled white spaces with `.`
+**.txt** files are for saving your WIP puzzle progress and for opening a puzzle in gridwords. Black spaces are maked with `#`, unfilled white spaces with `.`
+```<GRIDWORDS PUZZLE>
+<TITLE>
+  Incomplete Puzzle
+<AUTHOR>
+  sagemeadows
+<DESCRIPTION>
+  This is an unfinished puzzle.
+<SIZE>
+  5x5
+<GRID>
+  #O..A
+  .U.#W
+  STERN
+  .#.OY
+  EPIC#
+<CLUES>
+  1 across,
+  1 down,Available? Not here (3)
+  2 down,
+  3 down,"Scratching face, old Scotsman with a beard (4)"
+  4 across,
+  4 down,
+  5 across,Small aquatic bird in rear of vessel (5)
+  6 down,Legendary bird biting head off dangerous reptile (3)
+  7 across,
+  8 across,Great drama
+```
+Note that there is a variety of clue formats (i.e. whether they include the number of letters or not, whether they are in quotation marks or not). If you like a clue but not its format, you can always edit the .txt file directly to change things to your liking.
 
 ```<GRIDWORDS PUZZLE>
 <TITLE>
@@ -48,6 +76,8 @@ Gridwords is a custom crossword puzzle maker that lets you design crossword puzz
   6 across,"Seize the day!"
   7 across,How backstroke contestant ends
 ```
+If you have a .txt file with this layout, you can load it in Gridwords with the 'Open...' button.
+
 This .txt file layout is adapted from the example given [here](https://www.litsoft.com/across/docs/AcrossTextFormat.pdf) on page 2.
 
 #### HTML
@@ -177,10 +207,9 @@ letter {
 </body>
 </html>
 ```
-
-## TO-DO
-- Figure out how to open files.
-- Create way to auto-fill possible words.
+## TO-DO:
+- Improve selected-cell movement so that it jumps to next unfinished word.
+- Clean up database, more clue format consistency.
 
 ## Disclaimers
 The crossword dataset used here is adapted from the [cryptics.georgeho.org](https://cryptics.georgeho.org/) dataset.

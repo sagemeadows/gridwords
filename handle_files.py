@@ -172,7 +172,8 @@ class SaveWindow(tk.Tk):
         self.destroy()
 
 
-# Parse .txt files
+# Open and parse .txt files
+# to reload puzzle grid
 def open_file(main_frame):
     """Open a puzzle for editing."""
     filepath = askopenfilename(
@@ -186,22 +187,22 @@ def open_file(main_frame):
             logger.debug(f"{filepath} not a suitable format for opening")
             return
         else: # Parse file
-            next(filepath) # '<TITLE>'
+            line = input_file.readline() # '<TITLE>'
             title = input_file.readline().strip(' \n')
-            next(filepath) # '<AUTHOR>'
+            line = input_file.readline() # '<AUTHOR>'
             author = input_file.readline().strip(' \n')
-            next(filepath) # '<DESCRIPTION>'
+            line = input_file.readline() # '<DESCRIPTION>'
             descrip = input_file.readline().strip(' \n')
-            next(filepath) # '<SIZE>'
+            line = input_file.readline() # '<SIZE>'
             size = input_file.readline().split('x')
-            rows = size[0]
-            columns = size[1]
-            next(filepath) # '<GRID>'
+            rows = int(size[0])
+            columns = int(size[1])
+            line = input_file.readline() # '<GRID>'
             grid = []
             line = input_file.readline()
             while line.startswith(' '):
                 gridline = line.strip(' \n')
-                letters = gridline.split('')
+                letters = list(gridline)
                 grid.append(letters)
                 line = input_file.readline()
             clues = []
@@ -217,10 +218,10 @@ def open_file(main_frame):
                 line = input_file.readline()
 
             # Create cellgrid using parsed info
-            
+            main_frame.createGrid(rows=rows, columns=columns, title=title, 
+                                  author=author, descrip=descrip, grid=grid, clues=clues)
         
-    #logger.debug(f"Opened puzzle file {filepath}")
-    main_frame.master.master.master.title(f'{title} - Gridwords')
+    logger.debug(f"Opened puzzle file {filepath}")
 
 
 # Convert puzzle to reloadable .txt file

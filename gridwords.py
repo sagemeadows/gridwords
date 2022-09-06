@@ -52,12 +52,9 @@ CELL_SIDE = 50
 CELL_MARGIN = 3
 INDEX_MARGIN = 2
 
-# Set temporary/default rows & columns
-ROWS = 3
-COLUMNS = 3
 
-
-# Define classes
+# Create a Cell class
+# Cells go into an array in the Cellgrid class
 class Cell(tk.Frame):
     def __init__(self, master=None, text='.', width=CELL_SIDE, height=CELL_SIDE):
         # create and format frame
@@ -101,15 +98,11 @@ class Cell(tk.Frame):
         self.down_pos = -1
 
 
-    def setText(self, text):
-        # update self.text variable which will automatically update the self.button's text
-        self.text.set(text)
-
     def setClueIndex(self, index):
         self.clue_index.set(str(index))
 
     def onClick(self, args=None):
-        logger.debug(f"Clicked Cell: ({self.row}, {self.column}; '{self.letter.get()}')")
+        logger.debug(f"Clicked Cell: ({self.row}, {self.column}, '{self.letter.get()}')")
         color_hex = self.button['background']
         if self.master.mode == 'grid':
             #color_hex = self.button['background']
@@ -156,6 +149,14 @@ class Cell(tk.Frame):
             elif self.master.mode == 'clue':
                 getPossClues(self.master.wword)
 
+    def setChar(self):
+        # update default char for new color assignment
+        color_hex = self.button['background']
+        if color_hex == BLACK:
+            self.letter.set('#')
+        else:
+            self.letter.set('.')
+
     def setColor(self, color_hex):
         self.button.configure(background=color_hex, activebackground=color_hex)
         self.clue_label.configure(background=color_hex, activebackground=color_hex)
@@ -168,14 +169,14 @@ class Cell(tk.Frame):
 # it will have a grid of Cells
 class CellGrid(tk.Frame):
     # define the ctor method
-    def __init__(self, master=None):
+    def __init__(self, master=None, title=None, author=None, descrip=None, rows=None, columns=None, grid=None, clues=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=BLACK, bd=CELL_MARGIN)
 
         # puzzle info
-        self.title = "Untitled Puzzle"
-        self.author = ""
-        self.descrip = ""
+        self.title = title
+        self.author = author
+        self.descrip = descrip
 
         # set mode
         self.mode = 'grid'
@@ -186,19 +187,53 @@ class CellGrid(tk.Frame):
         # create entries dict
         self.words = {}
 
-        for row in range(self.master.ROWS):
-            self.cells.append([])
+        if grid: # creating a grid from an opened & parsed file
+            for row in range(rows):
+                self.cells.append([])
 
-            for column in range(self.master.COLUMNS):
-                # create a Cell with 'self' as parent
-                cell = Cell(self)
+                for column in range(columns):
+                    # get character from parsed grid
+                    char = grid[row][column]
+                    cell = Cell(self)
+                    if char == '#':
+                        cell.setColor(BLACK)
+                    cell.letter.set(char)
 
-                # set cell's grid in this Frame
-                cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
+                    self.cells[row].append(cell)
+                    self.cells[row][column].row = row
+                    self.cells[row][column].column = column
 
-                self.cells[row].append(cell)
-                self.cells[row][column].row = row
-                self.cells[row][column].column = column
+                    # set cell's grid in this Frame
+                    cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
+
+        else: # creating a new grid
+            for row in range(rows):
+                self.cells.append([])
+
+                for column in range(columns):
+                    # create a Cell with 'self' as parent
+                    cell = Cell(self)
+
+                    self.cells[row].append(cell)
+                    self.cells[row][column].row = row
+                    self.cells[row][column].column = column
+
+                    # set cell's grid in this Frame
+                    cell.grid(row=row, column=column, padx=CELL_MARGIN, pady=CELL_MARGIN)
+
+        # create WIP entries frame
+        self.master.wip_words = WIPwordsFrame(self.master)
+
+        # fill entries dict
+        updateClueIndices(self)
+        spreadIndices(self)
+
+        # match clues, if present, to entries
+        if clues:
+            for clue_entry in clues:
+                key = f'{clue_entry[0]} {clue_entry[1]}'
+                if key in self.words:
+                    self.words[key].clue.set(clue_entry[2])
 
         # keep track of working letter coordinates
         self.wl = ()
@@ -224,7 +259,12 @@ class CellGrid(tk.Frame):
         self.root_window.bind("<BackSpace>", self.master.backspaceLetter)
         self.root_window.bind("<Delete>", self.master.deleteLetter)
 
-        logger.debug(f"Cells Grid: {self.cells}")
+        # title root window after puzzle title
+        self.root_window.title(f'{self.title} - Gridwords')
+
+        # put grid and wip_words into main frame (master)
+        self.grid(row=1, column=1)
+        self.master.wip_words.grid(row=2, column=1)
 
 
     def onCellClick(self, row, column):
@@ -234,6 +274,7 @@ class CellGrid(tk.Frame):
         opp_row = 0 - row - 1
 
         self.cells[opp_row][opp_column].setColor(color_hex)
+        self.cells[opp_row][opp_column].setChar()
         self.master.createWIPwords()
         updateClueIndices(self)
         spreadIndices(self)
@@ -255,6 +296,7 @@ class CellGrid(tk.Frame):
             logger.debug(f"{key}: {entry.word}")
 
 
+# Create a SideBar class for making, saving, and opening grids
 class SideBar(tk.Frame):
     # define the ctor method
     def __init__(self, master=None):
@@ -275,9 +317,9 @@ class SideBar(tk.Frame):
         self.btn_mk_grid = tk.Button(self, text="Create Grid", command=lambda : self.master.createGrid(rows=None, columns=None))
         self.btn_mk_grid.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
 
-        ## TODO: Figure out how to open a crossword puzzle file
-        #self.btn_open = tk.Button(self, text="Open", command=open_file)
-        #self.btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+        # open a crossword puzzle file
+        self.btn_open = tk.Button(self, text="Open...", command=lambda : open_file(self.master))
+        self.btn_open.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
 
         # save crossword puzzle
         self.btn_save = tk.Button(self, text="Save As...", command=self.openSaveWindow)
@@ -287,6 +329,8 @@ class SideBar(tk.Frame):
         save_window = SaveWindow(main_frame=self.master)
         save_window.mainloop()
 
+
+# Create a TopBar class for changing between puzzle-crafting modes
 class TopBar(tk.Frame):
     # define the ctor method
     def __init__(self, master=None):
@@ -306,6 +350,9 @@ class TopBar(tk.Frame):
 
         self.search_btn = tk.Button(self, text="Poss Words", bg=GRAY2, activebackground=CYAN,\
                                           command=lambda : allPossWords(self.master.cellgrid))
+
+        # put topbar in main frame (master)
+        self.grid(row=0, column=1)
 
     def gridMode(self, cellgrid):
         cellgrid.mode = 'grid'
@@ -343,6 +390,7 @@ class TopBar(tk.Frame):
                     cell.setColor(WHITE)
 
 
+# Create a frame for words and clues of puzzle entries
 class WIPwordsFrame(tk.Frame):
     # define the ctor method
     def __init__(self, master=None):
@@ -367,6 +415,8 @@ class WIPwordsFrame(tk.Frame):
 
         logger.debug("New WIP Words")
 
+
+# Create a RootWindow class which inclues a scrollable frame
 class RootWindow(tk.Tk):
     # define the ctor method
     def __init__(self):
@@ -417,15 +467,17 @@ class RootWindow(tk.Tk):
         self.destroy()
 
 
+# Create a frame, which becomes scrollable within the RootWindow,
+# that holds all the other frames
 class MainFrame(tk.Frame):
     # define the ctor method
     def __init__(self, master=None):
         # initialize the base class
         tk.Frame.__init__(self, master, bg=WHITE, bd=2)
 
-        # default rows and columns for grid
-        self.ROWS = 3
-        self.COLUMNS = 3
+        ## default rows and columns for grid
+        #self.ROWS = 3
+        #self.COLUMNS = 3
         
         # create logo
         self.logo = tk.Label(self, text="LOGO", background=YELLOW) # temporary
@@ -444,25 +496,20 @@ class MainFrame(tk.Frame):
         self.deletable = ["cellgrid", "topbar", "wip_words"]
 
 
-    def createGrid(self, rows=None, columns=None):
+    def createGrid(self, rows=None, columns=None, title="Untitled Puzzle", 
+                         author="", descrip="", grid=None, clues=None):
         for frame in self.deletable:
             exec(f"if self.{frame}: self.{frame}.destroy()")
 
-        self.ROWS = int(self.sidebar.ent_rows.get())
-        self.COLUMNS = int(self.sidebar.ent_columns.get())
+        if not rows:
+            rows = int(self.sidebar.ent_rows.get())
+        if not columns:
+            columns = int(self.sidebar.ent_columns.get())
 
-        self.cellgrid = CellGrid(self)
-        self.cellgrid.grid(row=1, column=1)
-        self.master.master.master.title(f'{self.cellgrid.title} - Gridwords')
+        self.cellgrid = CellGrid(master=self, rows=rows, columns=columns, title=title, 
+                                       author=author, descrip=descrip, grid=grid, clues=clues)
 
         self.topbar = TopBar(self)
-        self.topbar.grid(row=0, column=1)#, sticky="nw")
-
-        self.wip_words = WIPwordsFrame(self)
-        self.wip_words.grid(row=2, column=1)#, sticky="nw")
-
-        updateClueIndices(self.cellgrid)
-        spreadIndices(self.cellgrid)
 
     def createWIPwords(self):
         if self.wip_words:
